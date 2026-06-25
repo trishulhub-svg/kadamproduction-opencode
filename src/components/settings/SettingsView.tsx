@@ -1,0 +1,69 @@
+// src/components/settings/SettingsView.tsx  (Improvement #3: attach logo)
+"use client";
+import { useState } from "react";
+import { Button, Card, Label } from "@/components/ui";
+import { setLogo, removeLogo } from "@/server/settings-actions";
+import { Upload, Trash2 } from "lucide-react";
+
+export function SettingsView({ logoUrl }: { logoUrl: string | null }) {
+  const [preview, setPreview] = useState<string | null>(logoUrl);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError(null);
+    if (file.size > 300_000) { setError("Logo too large. Please use an image under ~220KB."); return; }
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const dataUrl = String(reader.result);
+      setPreview(dataUrl);
+      setPending(true);
+      try { await setLogo(dataUrl); } catch (err) { setError((err as Error).message); setPreview(logoUrl); } finally { setPending(false); }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function remove() {
+    if (!confirm("Remove the logo?")) return;
+    setPending(true);
+    await removeLogo();
+    setPreview(null);
+    setPending(false);
+  }
+
+  return (
+    <div>
+      <h1 className="mb-5 text-2xl font-bold text-gray-900">Admin Settings</h1>
+      <Card className="max-w-lg p-5">
+        <h3 className="mb-1 text-sm font-semibold text-gray-700">Company Logo</h3>
+        <p className="mb-4 text-xs text-gray-500">Shown in the sidebar and on invoices. Use a square image under ~220KB.</p>
+
+        <div className="mb-4 flex items-center gap-4">
+          <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
+            {preview ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={preview} alt="logo preview" className="h-full w-full object-contain" />
+            ) : (
+              <span className="text-xs text-gray-400">No logo</span>
+            )}
+          </div>
+          <div className="space-y-2">
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-kp-primary px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+              <Upload className="h-4 w-4" /> {pending ? "Uploading…" : "Upload Logo"}
+              <input type="file" accept="image/*" onChange={onFile} className="hidden" disabled={pending} />
+            </label>
+            {preview && (
+              <button onClick={remove} disabled={pending} className="flex items-center gap-1 text-sm text-kp-danger hover:underline disabled:opacity-50">
+                <Trash2 className="h-4 w-4" /> Remove
+              </button>
+            )}
+          </div>
+        </div>
+        {error && <p className="text-sm text-kp-danger">{error}</p>}
+        <p className="text-xs text-gray-400">Logo is stored securely in the database and used across the app.</p>
+      </Card>
+    </div>
+  );
+}

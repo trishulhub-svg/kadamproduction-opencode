@@ -1,0 +1,43 @@
+// src/server/employee-actions.ts
+"use server";
+import { revalidatePath } from "next/cache";
+import { eq, isNull, and } from "drizzle-orm";
+import { db, schema } from "@/lib/db";
+import { requireAdmin, hashPassword } from "@/lib/auth";
+
+export async function createEmployee(input: { name: string; email: string; phone?: string; password: string }) {
+  const user = await requireAdmin();
+  if (!user) throw new Error("Unauthorized");
+  const email = input.email.toLowerCase().trim();
+  const exists = await db.select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.email, email)).limit(1);
+  if (exists.length) throw new Error("Email already in use.");
+  await db.insert(schema.users).values({
+    name: input.name.trim(),
+    email,
+    phone: input.phone || null,
+    password: await hashPassword(input.password),
+    role: "employee",
+    mustChangePwd: false,
+  });
+  revalidatePath("/employees");
+}
+
+export async function resetPassword(userId: number, newPassword: string) {
+  const user = await requireAdmin();
+  if (!user) throw new Error("Unauthorized");
+  await db.update(schema.users).set({ password: await hashPassword(newPassword) }).where(eq(schema.users.id, userId));
+  revalidatePath("/employees");
+}
+
+export async function deleteEmployee(userId: number) {
+  const user = await requireAdmin();
+  if (!user) throw new Error("Unauthorized");
+  await db.update(schema.users).set({ deletedAt: new Date() }).where(eq(schema.users.id, userId));
+  revalidatePath("/employees");
+}
+
+export async function listEmployees() {
+  const user = await requireAdmin();
+  if (!user) throw new Error("Unauthorized");
+  return db.select({ id: schema.users.id, name: schema.users.name, email: schema.users.email, phone: schema.users.phone }).from(schema.users).where(and(eq(schema.users.role, "employee"), isNull(schema.users.deletedAt)));
+}

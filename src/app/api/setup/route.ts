@@ -1,0 +1,168 @@
+// src/app/api/setup/route.ts
+// One-time bootstrap: creates all tables (IF NOT EXISTS) and seeds an admin.
+// Call GET /api/setup after first deploy, then log in and change the password.
+import { NextResponse } from "next/server";
+import { createClient } from "@libsql/client";
+import bcrypt from "bcryptjs";
+
+const DDL = [
+  `CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'employee',
+    phone TEXT,
+    must_change_pwd INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    deleted_at INTEGER
+  )`,
+  `CREATE TABLE IF NOT EXISTS sessions (
+    id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    refresh_token TEXT NOT NULL UNIQUE,
+    rotated INTEGER NOT NULL DEFAULT 0,
+    expires_at INTEGER NOT NULL,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    revoked_at INTEGER
+  )`,
+  `CREATE TABLE IF NOT EXISTS password_resets (
+    id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token TEXT NOT NULL UNIQUE,
+    expires_at INTEGER NOT NULL,
+    used_at INTEGER,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch())
+  )`,
+  `CREATE TABLE IF NOT EXISTS categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    updated_at INTEGER NOT NULL DEFAULT (unixepoch())
+  )`,
+  `CREATE TABLE IF NOT EXISTS items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    barcode TEXT NOT NULL UNIQUE,
+    category_id INTEGER,
+    quantity INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'available',
+    current_order_id INTEGER,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    deleted_at INTEGER
+  )`,
+  `CREATE TABLE IF NOT EXISTS orders (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_name TEXT NOT NULL,
+    contact_person TEXT,
+    contact_phone TEXT,
+    contact_email TEXT,
+    transport_contact_name TEXT,
+    transport_contact_phone TEXT,
+    event_date TEXT,
+    event_time TEXT,
+    setup_date TEXT,
+    setup_time TEXT,
+    address TEXT,
+    billing_address TEXT,
+    total_budget REAL NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'upcoming',
+    event_category TEXT DEFAULT 'Other',
+    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    deleted_at INTEGER
+  )`,
+  `CREATE TABLE IF NOT EXISTS order_items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    item_id INTEGER NOT NULL REFERENCES items(id),
+    quantity INTEGER NOT NULL DEFAULT 1,
+    reserved_at INTEGER,
+    scanned_out_at INTEGER,
+    scanned_in_at INTEGER
+  )`,
+  `CREATE TABLE IF NOT EXISTS order_assignments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
+  )`,
+  `CREATE TABLE IF NOT EXISTS teams (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    description TEXT,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    deleted_at INTEGER
+  )`,
+  `CREATE TABLE IF NOT EXISTS team_members (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    team_id INTEGER NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE
+  )`,
+  `CREATE TABLE IF NOT EXISTS finance (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER,
+    type TEXT NOT NULL,
+    category TEXT NOT NULL,
+    amount REAL NOT NULL,
+    description TEXT,
+    date TEXT,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    deleted_at INTEGER
+  )`,
+  `CREATE TABLE IF NOT EXISTS settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at INTEGER NOT NULL DEFAULT (unixepoch())
+  )`,
+  `CREATE TABLE IF NOT EXISTS audit_log (
+    id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    action TEXT NOT NULL,
+    entity_type TEXT NOT NULL,
+    entity_id TEXT NOT NULL,
+    before TEXT,
+    after TEXT,
+    ip TEXT,
+    user_agent TEXT,
+    timestamp INTEGER NOT NULL DEFAULT (unixepoch())
+  )`,
+];
+
+export async function GET() {
+  const url = process.env.TURSO_DATABASE_URL;
+  const token = process.env.TURSO_AUTH_TOKEN;
+  if (!url || !token) {
+    return NextResponse.json({ ok: false, error: "TURSO_DATABASE_URL / TURSO_AUTH_TOKEN not set." }, { status: 500 });
+  }
+
+  const client = createClient({ url, authToken: token });
+  const log: string[] = [];
+  try {
+    for (const stmt of DDL) {
+      await client.execute(stmt);
+    }
+    log.push("Tables ensured (13 tables).");
+
+    // Seed admin if none exists
+    const existing = await client.execute("SELECT id FROM users WHERE role = 'admin' LIMIT 1");
+    if (existing.rows.length === 0) {
+      const hash = await bcrypt.hash("admin123", 10);
+      await client.execute({
+        sql: "INSERT INTO users (name, email, password, role, must_change_pwd) VALUES (?, ?, ?, 'admin', 1)",
+        args: ["KP Admin", "admin@kadamproduction.in", hash],
+      });
+      log.push("Seeded admin → admin@kadamproduction.in / admin123");
+    } else {
+      log.push("Admin already exists — skipped seeding.");
+    }
+
+    return NextResponse.json({ ok: true, log });
+  } catch (e) {
+    return NextResponse.json({ ok: false, error: (e as Error).message, log }, { status: 500 });
+  }
+}
