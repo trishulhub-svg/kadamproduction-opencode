@@ -71,12 +71,12 @@ export async function statusCounts() {
   return map;
 }
 
-/** Full order detail for the Manage page. */
+/** Full order detail for the Manage page — OPTIMIZED: single batch for committed quantities. */
 export async function getOrderDetail(orderId: number) {
   const order = await db.select().from(schema.orders).where(eq(schema.orders.id, orderId)).limit(1).then((r) => r[0]);
   if (!order) return null;
 
-  const [orderItems, assignments, transactions, allItems, employees] = await Promise.all([
+  const [orderItems, assignments, transactions, allItems, employees, committedRows] = await Promise.all([
     db
       .select({
         id: schema.orderItems.id,
@@ -100,24 +100,28 @@ export async function getOrderDetail(orderId: number) {
       .from(schema.items)
       .where(and(isNull(schema.items.deletedAt), inArray(schema.items.status, ["available", "busy"]))),
     db.select({ id: schema.users.id, name: schema.users.name }).from(schema.users).where(and(eq(schema.users.role, "employee"), isNull(schema.users.deletedAt))),
+    // Single batch query: committed qty per item across active orders, excluding this order
+    db
+      .select({
+        itemId: schema.orderItems.itemId,
+        committed: sql<number>`coalesce(sum(${schema.orderItems.quantity}), 0)`,
+      })
+      .from(schema.orderItems)
+      .innerJoin(schema.orders, eq(schema.orderItems.orderId, schema.orders.id))
+      .where(and(
+        inArray(schema.orders.status, ["upcoming", "ongoing"]),
+        sql`${schema.orderItems.orderId} <> ${orderId}`,
+        inArray(schema.orderItems.itemId, sql`(select ${schema.items.id} from ${schema.items} where ${schema.items.deletedAt} is null and ${schema.items.status} in ('available','busy'))`),
+      ))
+      .groupBy(schema.orderItems.itemId),
   ]);
 
-  // availability per item (committed across active orders, excluding this order's own reservation)
+  const committedMap = Object.fromEntries(committedRows.map((r) => [r.itemId, Number(r.committed)]));
   const itemAvail: Record<number, number> = {};
   for (const it of allItems) {
-    const committed = await committedForItemExcludingOrder(it.id, orderId);
-    itemAvail[it.id] = Math.max(0, it.quantity - committed);
+    itemAvail[it.id] = Math.max(0, it.quantity - (committedMap[it.id] ?? 0));
   }
 
   const paid = transactions.filter((t) => t.type === "income").reduce((a, t) => a + Number(t.amount), 0);
   return { order, orderItems, assignments, transactions, allItems, employees, itemAvail, paid };
-}
-
-async function committedForItemExcludingOrder(itemId: number, excludeOrderId: number): Promise<number> {
-  const rows = await db
-    .select({ total: sql<number>`coalesce(sum(${schema.orderItems.quantity}),0)` })
-    .from(schema.orderItems)
-    .innerJoin(schema.orders, eq(schema.orderItems.orderId, schema.orders.id))
-    .where(and(eq(schema.orderItems.itemId, itemId), inArray(schema.orders.status, ["upcoming", "ongoing"]), sql`${schema.orderItems.orderId} <> ${excludeOrderId}`));
-  return Number(rows[0]?.total ?? 0);
 }

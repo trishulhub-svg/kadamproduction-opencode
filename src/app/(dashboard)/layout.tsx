@@ -9,18 +9,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  // Defensive: DB reads must never break the whole shell.
   let logoUrl: string | null = null;
   let scanEnabled = true;
   try {
-    logoUrl = await getLogoUrl();
+    [logoUrl, scanEnabled] = await Promise.all([getLogoUrl(), getScanEnabled()]);
   } catch {
-    logoUrl = null;
-  }
-  try {
-    scanEnabled = await getScanEnabled();
-  } catch {
-    scanEnabled = true;
+    // DB reads must never break the shell
   }
 
   return (

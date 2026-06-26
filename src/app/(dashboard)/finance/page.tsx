@@ -14,23 +14,37 @@ export default async function FinancePage({ searchParams }: { searchParams: Prom
   if (sp.startDate) conds.push(gte(schema.finance.date, sp.startDate));
   if (sp.endDate) conds.push(lte(schema.finance.date, sp.endDate));
 
-  const [rows, orders] = await Promise.all([
+  const [rows, orders, summaryRows, dueRow] = await Promise.all([
     db.select().from(schema.finance).where(and(...conds)).orderBy(desc(schema.finance.date)),
     db.select({ id: schema.orders.id, clientName: schema.orders.clientName }).from(schema.orders).where(isNull(schema.orders.deletedAt)),
+    db
+      .select({
+        totalIncome: sql<number>`coalesce(sum(case when ${schema.finance.type} = 'income' then ${schema.finance.amount} end), 0)`,
+        totalExpense: sql<number>`coalesce(sum(case when ${schema.finance.type} = 'expense' then ${schema.finance.amount} end), 0)`,
+      })
+      .from(schema.finance)
+      .where(and(...conds)),
+    db
+      .select({
+        v: sql<number>`coalesce(sum(
+          case when ${schema.orders.totalBudget} > 0
+          then max(0, ${schema.orders.totalBudget} - coalesce((
+            select sum(${schema.finance.amount}) from ${schema.finance}
+            where ${schema.finance.orderId} = ${schema.orders.id}
+            and ${schema.finance.type} = 'income'
+            and ${schema.finance.deletedAt} is null
+          ), 0))
+          else 0 end
+        ), 0)`,
+      })
+      .from(schema.orders)
+      .where(and(isNull(schema.orders.deletedAt), sql`${schema.orders.status} != 'cancelled'`)),
   ]);
 
-  let income = 0, expense = 0;
-  for (const r of rows) { if (r.type === "income") income += Number(r.amount); else expense += Number(r.amount); }
-
-  // Calculate total due from orders
-  const ordersForDue = await db.select({ id: schema.orders.id, budget: schema.orders.totalBudget }).from(schema.orders).where(and(isNull(schema.orders.deletedAt), sql`${schema.orders.status} != 'cancelled'`));
-  let totalDue = 0;
-  for (const o of ordersForDue) {
-    const incForOrder = rows.filter((r) => r.orderId === o.id && r.type === "income").reduce((a, r) => a + Number(r.amount), 0);
-    totalDue += Math.max(0, Number(o.budget) - incForOrder);
-  }
-
-  const summary = { totalIncome: income, totalExpenses: expense, netProfit: income - expense, totalDue };
+  const totalIncome = Number(summaryRows[0]?.totalIncome ?? 0);
+  const totalExpense = Number(summaryRows[0]?.totalExpense ?? 0);
+  const totalDue = Number(dueRow[0]?.v ?? 0);
+  const summary = { totalIncome, totalExpenses: totalExpense, netProfit: totalIncome - totalExpense, totalDue };
 
   return (
     <Suspense fallback={<div className="p-8 text-sm text-gray-500">Loading finance…</div>}>

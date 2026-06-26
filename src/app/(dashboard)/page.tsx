@@ -1,23 +1,21 @@
 // src/app/(dashboard)/page.tsx — Dashboard
 import { Plus, CalendarClock, CalendarCheck, Users, FolderOpen, ClipboardList, TrendingUp, TrendingDown, Wallet, IndianRupee } from "lucide-react";
-import { and, eq, isNull, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
-import { getDashboardStats, countAssignedOrders } from "@/lib/queries";
-import { db, schema } from "@/lib/db";
+import { getDashboardStats, getFinanceTotals, countAssignedOrders } from "@/lib/queries";
 import { StatCard } from "@/components/StatCard";
 import { Card } from "@/components/ui";
 import { StatusBadge } from "@/components/StatusBadge";
 import { formatINR } from "@/lib/utils";
 
 export default async function DashboardPage() {
-  const user = (await getCurrentUser())!;
-  const isAdmin = user.role === "admin";
+  const user = await getCurrentUser();
+  const isAdmin = user?.role === "admin";
 
   if (!isAdmin) {
-    const assigned = await countAssignedOrders(user.id);
+    const assigned = await countAssignedOrders(user!.id);
     return (
       <div>
-        <Header name={user.name} role="EMPLOYEE" />
+        <Header name={user!.name} role="EMPLOYEE" />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="My Assigned Orders" value={assigned} tone="primary" href="/my-tasks" icon={ClipboardList} />
         </div>
@@ -31,39 +29,7 @@ export default async function DashboardPage() {
     );
   }
 
-  const s = await getDashboardStats();
-
-  // Finance summary for dashboard
-  const [incRow] = await db
-    .select({ v: sql<number>`coalesce(sum(${schema.finance.amount}),0)` })
-    .from(schema.finance)
-    .where(and(eq(schema.finance.type, "income"), isNull(schema.finance.deletedAt)));
-  const [expRow] = await db
-    .select({ v: sql<number>`coalesce(sum(${schema.finance.amount}),0)` })
-    .from(schema.finance)
-    .where(and(eq(schema.finance.type, "expense"), isNull(schema.finance.deletedAt)));
-  const totalIncome = Number(incRow?.v ?? 0);
-  const totalExpense = Number(expRow?.v ?? 0);
-
-  // Total Due = sum of (budget - paid) across non-cancelled, non-deleted orders
-  const [dueRow] = await db
-    .select({
-      v: sql<number>`coalesce(sum(
-        case when ${schema.orders.totalBudget} > 0
-        then max(0, ${schema.orders.totalBudget} - coalesce((
-          select sum(${schema.finance.amount}) from ${schema.finance}
-          where ${schema.finance.orderId} = ${schema.orders.id}
-          and ${schema.finance.type} = 'income'
-          and ${schema.finance.deletedAt} is null
-        ),0))
-        else 0 end
-      ),0)`,
-    })
-    .from(schema.orders)
-    .where(and(isNull(schema.orders.deletedAt), sql`${schema.orders.status} != 'cancelled'`));
-
-  const totalDue = Number(dueRow?.v ?? 0);
-  const netProfit = totalIncome - totalExpense;
+  const [s, finance] = await Promise.all([getDashboardStats(), getFinanceTotals()]);
 
   return (
     <div>
@@ -71,10 +37,10 @@ export default async function DashboardPage() {
 
       {/* Finance cards — colorful */}
       <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <FinanceCard label="Total Income" value={formatINR(totalIncome)} icon={TrendingUp} className="bg-emerald-500 text-white" />
-        <FinanceCard label="Total Expense" value={formatINR(totalExpense)} icon={TrendingDown} className="bg-red-500 text-white" />
-        <FinanceCard label="Total Due" value={formatINR(totalDue)} icon={Wallet} className="bg-blue-500 text-white" />
-        <FinanceCard label="Net Profit" value={formatINR(netProfit)} icon={IndianRupee} className="bg-amber-400 text-black" />
+        <FinanceCard label="Total Income" value={formatINR(finance.totalIncome)} icon={TrendingUp} className="bg-emerald-500 text-white" />
+        <FinanceCard label="Total Expense" value={formatINR(finance.totalExpense)} icon={TrendingDown} className="bg-red-500 text-white" />
+        <FinanceCard label="Total Due" value={formatINR(finance.totalDue)} icon={Wallet} className="bg-blue-500 text-white" />
+        <FinanceCard label="Net Profit" value={formatINR(finance.netProfit)} icon={IndianRupee} className="bg-amber-400 text-black" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
