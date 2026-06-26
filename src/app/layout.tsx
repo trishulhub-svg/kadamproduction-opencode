@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Agentation } from "agentation";
+import { ThemeProviderWrapper } from "@/components/ThemeProviderWrapper";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -40,13 +41,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body>
-        {children}
+        <ThemeProviderWrapper>
+          {children}
+        </ThemeProviderWrapper>
         <Agentation />
         <script
           dangerouslySetInnerHTML={{
             __html: `
               if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
+                window.addEventListener('load', function() {
                   navigator.serviceWorker.register('/sw.js').catch(function(){});
                 });
               }

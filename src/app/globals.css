@@ -81,7 +81,6 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  transition: background 0.3s ease, color 0.3s ease;
 }
 
 /* Dark mode text overrides — keeps existing text-gray-* classes working */
