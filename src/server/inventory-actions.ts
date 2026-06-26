@@ -5,6 +5,7 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { generateBarcode } from "@/lib/barcode";
+import { ITEM_STATUS } from "@/drizzle/schema";
 
 export async function createItem(input: { name: string; categoryId?: number; subcategoryId?: number; description?: string; quantity: number }) {
   const user = await requireAdmin();
@@ -38,8 +39,17 @@ export async function updateItem(itemId: number, input: { name?: string; categor
   if (input.subcategoryId !== undefined) patch.subcategoryId = input.subcategoryId || null;
   if (input.description !== undefined) patch.description = input.description?.trim() || null;
   if (input.quantity !== undefined) patch.quantity = Math.max(0, Math.floor(input.quantity));
-  if (input.status !== undefined) patch.status = input.status;
-  if (input.newBarcode && input.newBarcode.trim()) patch.barcode = input.newBarcode.trim();
+  if (input.status !== undefined) {
+    // M2: validate against allowed enum
+    if (!ITEM_STATUS.includes(input.status as typeof ITEM_STATUS[number])) throw new Error("Invalid status value.");
+    patch.status = input.status;
+  }
+  if (input.newBarcode && input.newBarcode.trim()) {
+    // M2: basic barcode format validation (alphanumeric, 4-30 chars)
+    const bc = input.newBarcode.trim();
+    if (!/^[A-Za-z0-9]{4,30}$/.test(bc)) throw new Error("Invalid barcode format.");
+    patch.barcode = bc;
+  }
   await db.update(schema.items).set(patch).where(eq(schema.items.id, itemId));
   revalidatePath("/inventory");
 }

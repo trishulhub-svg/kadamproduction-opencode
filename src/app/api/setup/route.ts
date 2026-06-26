@@ -147,11 +147,39 @@ const MIGRATION_DDL: { sql: string; label: string }[] = [
   { sql: `CREATE INDEX IF NOT EXISTS items_subcategory_idx ON items(subcategory_id)`, label: "items subcategory index" },
 ];
 
-export async function GET() {
+export async function GET(req: Request) {
   const url = process.env.TURSO_DATABASE_URL;
   const token = process.env.TURSO_AUTH_TOKEN;
   if (!url || !token) {
-    return NextResponse.json({ ok: false, error: "TURSO_DATABASE_URL / TURSO_AUTH_TOKEN not set." }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Database not configured." }, { status: 500 });
+  }
+
+  // Security: require either an existing admin session OR a SETUP_BOOTSTRAP_TOKEN env var.
+  const bootstrapToken = process.env.SETUP_BOOTSTRAP_TOKEN;
+  const authHeader = req.headers.get("authorization");
+  const cookieHeader = req.headers.get("cookie") || "";
+
+  // Allow if a valid admin JWT cookie is present
+  let authorized = false;
+  if (bootstrapToken && authHeader === `Bearer ${bootstrapToken}`) {
+    authorized = true;
+  }
+  if (!authorized) {
+    // Check for admin session via cookie
+    try {
+      const { jwtVerify } = await import("jose");
+      const cookie = cookieHeader.match(/kp_session=([^;]+)/)?.[1];
+      if (cookie) {
+        const secret = new TextEncoder().encode(process.env.AUTH_SECRET || "dev-secret-change-me");
+        const { payload } = await jwtVerify(cookie, secret);
+        if (payload.role === "admin") authorized = true;
+      }
+    } catch {
+      // invalid token
+    }
+  }
+  if (!authorized) {
+    return NextResponse.json({ ok: false, error: "Unauthorized. Admin login required." }, { status: 403 });
   }
 
   const client = createClient({ url, authToken: token });
@@ -206,7 +234,7 @@ export async function GET() {
     }
 
     return NextResponse.json({ ok: true, log });
-  } catch (e) {
-    return NextResponse.json({ ok: false, error: (e as Error).message, log }, { status: 500 });
+  } catch {
+    return NextResponse.json({ ok: false, error: "Setup failed. Check server logs.", log }, { status: 500 });
   }
 }

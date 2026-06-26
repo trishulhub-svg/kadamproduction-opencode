@@ -1,14 +1,22 @@
 // src/components/ChangePasswordView.tsx
 "use client";
 import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button, Input, Label, Card } from "@/components/ui";
 import { changePasswordAction } from "@/server/auth-actions";
 
 export function ChangePasswordView() {
   const [state, formAction, pending] = useActionState(changePasswordAction, null);
+  const searchParams = useSearchParams();
+  const forced = searchParams.get("force") === "1";
 
   return (
     <Card className="max-w-md p-5">
+      {forced && (
+        <div className="mb-4 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800 font-medium">
+          Your password must be changed before continuing.
+        </div>
+      )}
       <form action={formAction} className="space-y-4">
         <div><Label>Current Password</Label><Input name="current" type="password" required /></div>
         <div><Label>New Password</Label><Input name="new" type="password" required minLength={6} /></div>

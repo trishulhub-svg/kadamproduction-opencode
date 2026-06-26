@@ -13,6 +13,8 @@ export async function loginAction(_prev: { error?: string } | null, formData: Fo
   const password = String(formData.get("password") || "");
   const res = await login(email, password);
   if (!res.ok) return { error: res.error };
+  // C2: Force password change if flagged
+  if (res.mustChangePwd) redirect("/change-password?force=1");
   redirect("/");
 }
 

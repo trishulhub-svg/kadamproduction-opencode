@@ -1,5 +1,5 @@
 // src/middleware.ts
-// Auth + RBAC gate. Public routes: /login, /api/upload/logo, static assets.
+// Auth + RBAC gate. Public routes: /login, static assets.
 import { NextResponse, type NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
@@ -9,12 +9,20 @@ const COOKIE = "kp_session";
 async function roleFromToken(token?: string): Promise<"admin" | "employee" | null> {
   if (!token) return null;
   try {
-    const secret = new TextEncoder().encode(process.env.AUTH_SECRET || "dev-secret-change-me");
+    const secretStr = process.env.AUTH_SECRET;
+    if (!secretStr) return null; // H1: no weak fallback
+    const secret = new TextEncoder().encode(secretStr);
     const { payload } = await jwtVerify(token, secret);
     return (payload.role as "admin" | "employee") ?? null;
   } catch {
     return null;
   }
+}
+
+// L2: Validate redirect param — only allow same-origin relative paths
+function sanitizeRedirect(path: string): string {
+  if (/^\/(?!\/)/.test(path) && !path.startsWith("//")) return path;
+  return "/";
 }
 
 export async function middleware(req: NextRequest) {
@@ -30,7 +38,7 @@ export async function middleware(req: NextRequest) {
   if (!role) {
     const url = req.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set("redirect", pathname);
+    url.searchParams.set("redirect", sanitizeRedirect(pathname)); // L2
     return NextResponse.redirect(url);
   }
 
