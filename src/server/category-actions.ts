@@ -64,11 +64,12 @@ export async function deleteSubcategory(id: number) {
 export async function createCategoryItem(input: { name: string; categoryId: number; subcategoryId: number; description?: string; quantity: number }) {
   const user = await requireAdmin();
   if (!user) throw new Error("Unauthorized");
+  if (!input.subcategoryId) throw new Error("Items must be created under a sub-category.");
   const name = input.name.trim().toUpperCase();
   await db.insert(schema.items).values({
     name,
     categoryId: input.categoryId || null,
-    subcategoryId: input.subcategoryId || null,
+    subcategoryId: input.subcategoryId,
     description: input.description?.trim() || null,
     quantity: Number(input.quantity) || 0,
     barcode: generateBarcode(),

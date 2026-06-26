@@ -10,11 +10,12 @@ import { ITEM_STATUS } from "@/drizzle/schema";
 export async function createItem(input: { name: string; categoryId?: number; subcategoryId?: number; description?: string; quantity: number }) {
   const user = await requireAdmin();
   if (!user) throw new Error("Unauthorized");
-  const name = input.name.trim().toUpperCase(); // PHP uppercases on save
+  if (!input.subcategoryId) throw new Error("Items must be created under a sub-category.");
+  const name = input.name.trim().toUpperCase();
   await db.insert(schema.items).values({
     name,
     categoryId: input.categoryId || null,
-    subcategoryId: input.subcategoryId || null,
+    subcategoryId: input.subcategoryId,
     description: input.description?.trim() || null,
     quantity: Number(input.quantity) || 0,
     barcode: generateBarcode(),

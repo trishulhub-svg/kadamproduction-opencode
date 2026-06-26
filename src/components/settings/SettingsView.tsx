@@ -1,11 +1,10 @@
-// src/components/settings/SettingsView.tsx  (Improvement #3: attach logo)
+// src/components/settings/SettingsView.tsx
 "use client";
 import { useState } from "react";
-import { Button, Card, Label } from "@/components/ui";
-import { setLogo, removeLogo, setScanEnabled } from "@/server/settings-actions";
-import { Upload, Trash2, ScanLine } from "lucide-react";
+import { Button, Card, Input, Label } from "@/components/ui";
+import { setLogo, removeLogo, setScanEnabled, saveSmtpSettings, testSmtpSettings } from "@/server/settings-actions";
+import { Upload, Trash2, ScanLine, Mail, Send } from "lucide-react";
 
-/** Downscale an image file to a square-ish max dimension and return a PNG data URL (preserves transparency). */
 function resizeImage(file: File, maxDim: number): Promise<string> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
@@ -28,11 +27,19 @@ function resizeImage(file: File, maxDim: number): Promise<string> {
   });
 }
 
-export function SettingsView({ logoUrl, scanEnabled }: { logoUrl: string | null; scanEnabled: boolean }) {
+type SmtpData = { host: string; port: string; user: string; pass: string; from: string };
+
+export function SettingsView({ logoUrl, scanEnabled, smtp }: { logoUrl: string | null; scanEnabled: boolean; smtp: SmtpData }) {
   const [preview, setPreview] = useState<string | null>(logoUrl);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scanOn, setScanOn] = useState(scanEnabled);
+
+  const [smtpData, setSmtpData] = useState<SmtpData>(smtp);
+  const [smtpPending, setSmtpPending] = useState(false);
+  const [smtpMsg, setSmtpMsg] = useState<string | null>(null);
+  const [testEmail, setTestEmail] = useState("");
+  const [testPending, setTestPending] = useState(false);
 
   async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -40,7 +47,6 @@ export function SettingsView({ logoUrl, scanEnabled }: { logoUrl: string | null;
     setError(null);
     if (!file.type.startsWith("image/")) { setError("Only image files are allowed."); return; }
     try {
-      // Resize client-side so the stored data URL stays small (prevents large-payload render crashes on Vercel)
       const dataUrl = await resizeImage(file, 256);
       setPreview(dataUrl);
       setPending(true);
@@ -58,17 +64,41 @@ export function SettingsView({ logoUrl, scanEnabled }: { logoUrl: string | null;
     setPending(false);
   }
 
+  async function saveSmtp(e: React.FormEvent) {
+    e.preventDefault();
+    setSmtpPending(true);
+    setSmtpMsg(null);
+    try {
+      await saveSmtpSettings(smtpData);
+      setSmtpMsg("SMTP settings saved.");
+    } catch (err) {
+      setSmtpMsg(`Error: ${(err as Error).message}`);
+    }
+    setSmtpPending(false);
+  }
+
+  async function sendTest() {
+    if (!testEmail.trim()) return;
+    setTestPending(true);
+    try {
+      await testSmtpSettings(testEmail.trim());
+      setSmtpMsg("Test email sent!");
+    } catch (err) {
+      setSmtpMsg(`Error: ${(err as Error).message}`);
+    }
+    setTestPending(false);
+  }
+
   return (
     <div>
       <h1 className="mb-5 text-2xl font-bold text-gray-900">Admin Settings</h1>
+
       <Card className="max-w-lg p-5">
         <h3 className="mb-1 text-sm font-semibold text-gray-700">Company Logo</h3>
-        <p className="mb-4 text-xs text-gray-500">Shown in the sidebar and on invoices. Use a square image under ~220KB.</p>
-
+        <p className="mb-4 text-xs text-gray-500">Shown in sidebar, invoices, PWA. Use a square image under ~220KB.</p>
         <div className="mb-4 flex items-center gap-4">
           <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50">
             {preview ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img src={preview} alt="logo preview" className="h-full w-full object-contain" />
             ) : (
               <span className="text-xs text-gray-400">No logo</span>
@@ -87,10 +117,8 @@ export function SettingsView({ logoUrl, scanEnabled }: { logoUrl: string | null;
           </div>
         </div>
         {error && <p className="text-sm text-kp-danger">{error}</p>}
-        <p className="text-xs text-gray-400">Logo is stored securely in the database and used across the app.</p>
       </Card>
 
-      {/* Scan Item toggle */}
       <Card className="mt-4 max-w-lg p-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -99,7 +127,7 @@ export function SettingsView({ logoUrl, scanEnabled }: { logoUrl: string | null;
             </div>
             <div>
               <h3 className="text-sm font-semibold text-gray-700">Scan Item Visibility</h3>
-              <p className="text-xs text-gray-500">Toggle the Scan feature for all employee dashboards.</p>
+              <p className="text-xs text-gray-500">Toggle Scan for all employee dashboards.</p>
             </div>
           </div>
           <ToggleSwitch
@@ -110,6 +138,38 @@ export function SettingsView({ logoUrl, scanEnabled }: { logoUrl: string | null;
             }}
           />
         </div>
+      </Card>
+
+      <Card className="mt-4 max-w-lg p-5">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
+            <Mail className="h-5 w-5 text-blue-600" />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-gray-700">SMTP / Email Settings</h3>
+            <p className="text-xs text-gray-500">Configure outgoing email for notifications, welcome emails, etc.</p>
+          </div>
+        </div>
+        <form onSubmit={saveSmtp} className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>SMTP Host</Label><Input placeholder="smtp.gmail.com" value={smtpData.host} onChange={(e) => setSmtpData((s) => ({ ...s, host: e.target.value }))} /></div>
+            <div><Label>Port</Label><Input placeholder="587" value={smtpData.port} onChange={(e) => setSmtpData((s) => ({ ...s, port: e.target.value }))} /></div>
+          </div>
+          <div><Label>SMTP Username</Label><Input placeholder="user@example.com" value={smtpData.user} onChange={(e) => setSmtpData((s) => ({ ...s, user: e.target.value }))} /></div>
+          <div><Label>SMTP Password</Label><Input type="password" placeholder="••••••••" value={smtpData.pass} onChange={(e) => setSmtpData((s) => ({ ...s, pass: e.target.value }))} /></div>
+          <div><Label>From Email</Label><Input placeholder="noreply@kadamproduction.in" value={smtpData.from} onChange={(e) => setSmtpData((s) => ({ ...s, from: e.target.value }))} /></div>
+          <div className="flex items-center gap-3 pt-1">
+            <Button type="submit" disabled={smtpPending}>{smtpPending ? "Saving…" : "Save SMTP"}</Button>
+          </div>
+        </form>
+        <div className="mt-4 border-t border-gray-100 pt-4">
+          <Label>Send Test Email</Label>
+          <div className="mt-1 flex gap-2">
+            <Input placeholder="test@example.com" value={testEmail} onChange={(e) => setTestEmail(e.target.value)} className="flex-1" />
+            <Button variant="success" onClick={sendTest} disabled={testPending}><Send className="h-4 w-4" /> {testPending ? "Sending…" : "Test"}</Button>
+          </div>
+        </div>
+        {smtpMsg && <p className={`mt-2 text-sm ${smtpMsg.startsWith("Error") ? "text-kp-danger" : "text-kp-success"}`}>{smtpMsg}</p>}
       </Card>
     </div>
   );

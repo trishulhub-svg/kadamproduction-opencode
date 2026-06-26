@@ -39,3 +39,21 @@ export async function setScanEnabled(enabled: boolean) {
   await upsertSetting("scan_enabled", enabled ? "true" : "false");
   revalidatePath("/", "layout");
 }
+
+export async function saveSmtpSettings(input: { host: string; port: string; user: string; pass: string; from: string }) {
+  const admin = await requireAdmin();
+  if (!admin) throw new Error("Unauthorized");
+  await upsertSetting("smtp_host", input.host.trim());
+  await upsertSetting("smtp_port", input.port.trim());
+  await upsertSetting("smtp_user", input.user.trim());
+  await upsertSetting("smtp_pass", input.pass);
+  await upsertSetting("smtp_from", input.from.trim());
+  revalidatePath("/settings");
+}
+
+export async function testSmtpSettings(toEmail: string) {
+  const admin = await requireAdmin();
+  if (!admin) throw new Error("Unauthorized");
+  const { sendEmail } = await import("@/lib/email");
+  await sendEmail({ to: toEmail, subject: "Kadam Production — SMTP Test", html: "<p>SMTP is working correctly.</p>" });
+}

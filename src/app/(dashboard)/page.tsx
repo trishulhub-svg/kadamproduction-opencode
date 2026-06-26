@@ -1,11 +1,10 @@
 // src/app/(dashboard)/page.tsx — Dashboard
-import { Plus, CalendarClock, CalendarCheck, Users, FolderOpen, ClipboardList, TrendingUp, TrendingDown, Wallet, IndianRupee } from "lucide-react";
+import { Plus, CalendarClock, CalendarCheck, Users, FolderOpen, ClipboardList } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
-import { getDashboardStats, getFinanceTotals, countAssignedOrders } from "@/lib/queries";
+import { getDashboardStats, countAssignedOrders } from "@/lib/queries";
 import { StatCard } from "@/components/StatCard";
 import { Card } from "@/components/ui";
 import { StatusBadge } from "@/components/StatusBadge";
-import { formatINR } from "@/lib/utils";
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -15,7 +14,7 @@ export default async function DashboardPage() {
     const assigned = await countAssignedOrders(user!.id);
     return (
       <div>
-        <Header name={user!.name} role="EMPLOYEE" />
+        <h1 className="mb-6 text-2xl font-bold text-gray-900">Kadam Production</h1>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard label="My Assigned Orders" value={assigned} tone="primary" href="/my-tasks" icon={ClipboardList} />
         </div>
@@ -29,18 +28,13 @@ export default async function DashboardPage() {
     );
   }
 
-  const [s, finance] = await Promise.all([getDashboardStats(), getFinanceTotals()]);
+  const s = await getDashboardStats();
 
   return (
     <div>
-      <Header name={user.name} role="ADMIN" />
-
-      {/* Finance cards — colorful */}
-      <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <FinanceCard label="Total Income" value={formatINR(finance.totalIncome)} icon={TrendingUp} className="bg-emerald-500 text-white" />
-        <FinanceCard label="Total Expense" value={formatINR(finance.totalExpense)} icon={TrendingDown} className="bg-red-500 text-white" />
-        <FinanceCard label="Total Due" value={formatINR(finance.totalDue)} icon={Wallet} className="bg-blue-500 text-white" />
-        <FinanceCard label="Net Profit" value={formatINR(finance.netProfit)} icon={IndianRupee} className="bg-amber-400 text-black" />
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold text-gray-900">Kadam Production</h1>
+        <span className="rounded-lg bg-kp-primary px-3 py-1.5 text-sm font-semibold text-white">ADMIN</span>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -49,11 +43,9 @@ export default async function DashboardPage() {
         <StatCard label="Ongoing Orders" value={s.ongoingOrders} tone="info" href="/orders?status=ongoing" icon={CalendarClock} />
         <StatCard label="Upcoming" value={s.upcomingOrders} tone="secondary" href="/orders?status=upcoming" icon={CalendarCheck} />
         <StatCard label="Employees" value={s.employees} tone="dark" href="/employees" icon={Users} />
-        <StatCard label="Categories" value={s.categories} tone="success" href="/categories" icon={FolderOpen} />
       </div>
 
-      {/* Quick Information — visually enhanced */}
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card className="overflow-hidden border-l-4 border-l-kp-success p-4 shadow-sm">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-emerald-600">Active Events</p>
           <div className="flex items-center gap-3">
@@ -92,32 +84,6 @@ export default async function DashboardPage() {
           </div>
         </Card>
       </div>
-    </div>
-  );
-}
-
-function FinanceCard({ label, value, icon: Icon, className }: { label: string; value: string; icon: typeof TrendingUp; className: string }) {
-  return (
-    <div className={`flex items-center gap-3 rounded-xl p-4 shadow-sm ${className}`}>
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-white/20">
-        <Icon className="h-6 w-6" />
-      </div>
-      <div className="min-w-0">
-        <div className="text-xs font-medium uppercase tracking-wide opacity-80">{label}</div>
-        <div className="truncate text-xl font-bold">{value}</div>
-      </div>
-    </div>
-  );
-}
-
-function Header({ name, role }: { name: string; role: string }) {
-  return (
-    <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Welcome, {name}!</h1>
-        <p className="text-sm text-gray-500">Here&apos;s what&apos;s happening today</p>
-      </div>
-      <span className="rounded-lg bg-kp-primary px-3 py-1.5 text-sm font-semibold text-white">{role}</span>
     </div>
   );
 }

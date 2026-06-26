@@ -52,7 +52,7 @@ export function InventoryView({ categories, subcategories, items, date, totals }
         </div>
         <div>
           <Label className="mb-1">Availability Date</Label>
-          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-48" />
+          <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="w-full sm:w-48" />
         </div>
       </div>
 

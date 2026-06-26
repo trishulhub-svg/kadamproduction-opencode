@@ -19,3 +19,14 @@ export async function getScanEnabled(): Promise<boolean> {
   const v = await getSetting("scan_enabled");
   return v !== "false";
 }
+
+export async function getSmtpSettings() {
+  const [host, port, user, pass, from] = await Promise.all([
+    getSetting("smtp_host"),
+    getSetting("smtp_port"),
+    getSetting("smtp_user"),
+    getSetting("smtp_pass"),
+    getSetting("smtp_from"),
+  ]);
+  return { host: host ?? "", port: port ?? "", user: user ?? "", pass: pass ?? "", from: from ?? "" };
+}

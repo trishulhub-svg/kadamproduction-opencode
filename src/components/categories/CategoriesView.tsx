@@ -32,7 +32,6 @@ export function CategoriesView({ categories, subcategories, items }: { categorie
 
   const subsOf = (catId: number) => subcategories.filter((s) => s.categoryId === catId);
   const itemsOfSub = (subId: number) => items.filter((i) => i.subcategoryId === subId);
-  const itemsOfCat = (catId: number) => items.filter((i) => i.categoryId === catId && !i.subcategoryId);
 
   return (
     <div>
@@ -45,21 +44,19 @@ export function CategoriesView({ categories, subcategories, items }: { categorie
         <div className="space-y-3">
           {categories.map((cat) => {
             const subs = subsOf(cat.id);
-            const directItems = itemsOfCat(cat.id);
             const isOpen = expanded.has(cat.id);
             return (
               <Card key={cat.id} className="overflow-hidden">
-                {/* Master Category header */}
                 <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-3">
                   <button onClick={() => toggle(cat.id)} className="flex flex-1 items-center gap-2 text-left">
                     {isOpen ? <ChevronDown className="h-5 w-5 text-gray-500" /> : <ChevronRight className="h-5 w-5 text-gray-500" />}
                     <FolderOpen className="h-5 w-5 text-blue-600" />
                     <div>
                       <span className="font-semibold text-gray-900">{cat.name}</span>
-                      {cat.description && <span className="ml-2 text-xs text-gray-500">{cat.description}</span>}
+                      {cat.description && <span className="ml-2 truncate text-xs text-gray-500">{cat.description}</span>}
                     </div>
-                    <span className="ml-2 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
-                      {subs.length} sub · {directItems.length + subs.reduce((a, s) => a + itemsOfSub(s.id).length, 0)} items
+                    <span className="ml-2 shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">
+                      {subs.length} sub · {subs.reduce((a, s) => a + itemsOfSub(s.id).length, 0)} items
                     </span>
                   </button>
                   <div className="flex gap-1">
@@ -68,11 +65,10 @@ export function CategoriesView({ categories, subcategories, items }: { categorie
                   </div>
                 </div>
 
-                {/* Expanded content */}
                 {isOpen && (
                   <div className="space-y-2 p-3">
-                    {subs.length === 0 && directItems.length === 0 && (
-                      <p className="px-2 py-3 text-sm text-gray-400">No sub-categories or items yet.</p>
+                    {subs.length === 0 && (
+                      <p className="px-2 py-3 text-sm text-gray-400">No sub-categories yet. Add a sub-category, then add items under it.</p>
                     )}
                     {subs.map((sub) => {
                       const subItems = itemsOfSub(sub.id);
@@ -99,16 +95,6 @@ export function CategoriesView({ categories, subcategories, items }: { categorie
                         </div>
                       );
                     })}
-                    {directItems.length > 0 && (
-                      <div className="rounded-lg border border-gray-100">
-                        <div className="bg-gray-50 px-3 py-2 text-xs font-medium text-gray-500">Direct Items</div>
-                        <div className="divide-y divide-gray-50">
-                          {directItems.map((item) => (
-                            <ItemRowDisplay key={item.id} item={item} onPrint={() => setPrintItem(item)} />
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
               </Card>
@@ -117,10 +103,8 @@ export function CategoriesView({ categories, subcategories, items }: { categorie
         </div>
       )}
 
-      {/* FAB with menu */}
       <FabMenu onSelect={setAddType} />
 
-      {/* Modals */}
       {addType === "master" && <MasterModal onClose={() => setAddType(null)} />}
       {addType === "sub" && <SubModal categories={categories} onClose={() => setAddType(null)} />}
       {addType === "item" && <ItemModal categories={categories} subcategories={subcategories} onClose={() => setAddType(null)} />}
@@ -133,15 +117,13 @@ export function CategoriesView({ categories, subcategories, items }: { categorie
 
 function ItemRowDisplay({ item, onPrint }: { item: ItemRow; onPrint: () => void }) {
   return (
-    <div className="flex items-center justify-between px-3 py-2 hover:bg-gray-50">
-      <div className="flex items-center gap-2">
-        <Package className="h-4 w-4 text-gray-400" />
-        <div>
-          <span className="text-sm font-medium text-gray-800">{item.name}</span>
-          {item.description && <span className="ml-2 text-xs text-gray-400">{item.description}</span>}
-        </div>
-        <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">Qty: {item.quantity}</span>
-        <span className="font-mono text-xs text-gray-400">{item.barcode}</span>
+    <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 hover:bg-gray-50">
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <Package className="h-4 w-4 shrink-0 text-gray-400" />
+        <span className="truncate text-sm font-medium text-gray-800">{item.name}</span>
+        {item.description && <span className="truncate text-xs text-gray-400">{item.description}</span>}
+        <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">Qty: {item.quantity}</span>
+        <span className="shrink-0 font-mono text-xs text-gray-400">{item.barcode}</span>
       </div>
       <Button size="sm" variant="ghost" onClick={onPrint}><Printer className="h-3.5 w-3.5" /></Button>
     </div>
@@ -288,9 +270,9 @@ function ItemModal({ categories, subcategories, onClose }: { categories: MasterC
           </Select>
         </div>
         <div>
-          <Label>Sub-Category</Label>
-          <Select name="subcategoryId">
-            <option value="">— None —</option>
+          <Label>Sub-Category *</Label>
+          <Select name="subcategoryId" required>
+            <option value="">— Select —</option>
             {filteredSubs.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </Select>
         </div>
@@ -328,7 +310,6 @@ function PrintBarcodeModal({ item, onClose }: { item: ItemRow; onClose: () => vo
   );
 }
 
-/** Generate SVG bars from a barcode string */
 function generateBarcodeSvg(code: string): React.ReactNode {
   const bars: React.ReactNode[] = [];
   let x = 0;

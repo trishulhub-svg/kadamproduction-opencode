@@ -2,7 +2,7 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTransition, useState } from "react";
-import { TrendingUp, TrendingDown, Wallet, IndianRupee } from "lucide-react";
+import { TrendingUp, TrendingDown, Wallet, IndianRupee, Eye, EyeOff } from "lucide-react";
 import { Button, Input, Label, Select, Modal, Card, EmptyState } from "@/components/ui";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Fab } from "@/components/Fab";
@@ -22,6 +22,9 @@ export function FinanceView({ summary, transactions, orders, startDate, endDate 
   const sp = useSearchParams();
   const [, startTransition] = useTransition();
   const [addOpen, setAddOpen] = useState(false);
+  const [amountsVisible, setAmountsVisible] = useState(false);
+
+  const hasDateFilter = Boolean(startDate || endDate);
 
   function setRange(key: string, value: string) {
     const next = new URLSearchParams(sp.toString());
@@ -31,24 +34,22 @@ export function FinanceView({ summary, transactions, orders, startDate, endDate 
 
   return (
     <div>
-      <h1 className="mb-5 text-2xl font-bold text-gray-900">Finance</h1>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold text-gray-900">Finance</h1>
+        <button
+          onClick={() => setAmountsVisible(!amountsVisible)}
+          className="flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50"
+        >
+          {amountsVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          {amountsVisible ? "Hide Amounts" : "Show Amounts"}
+        </button>
+      </div>
+
       <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="flex items-center gap-3 rounded-xl bg-emerald-500 p-4 text-white shadow-sm">
-          <TrendingUp className="h-8 w-8 opacity-80" />
-          <div><p className="text-xs opacity-80">Total Income</p><p className="text-xl font-bold">{formatINR(summary.totalIncome)}</p></div>
-        </div>
-        <div className="flex items-center gap-3 rounded-xl bg-red-500 p-4 text-white shadow-sm">
-          <TrendingDown className="h-8 w-8 opacity-80" />
-          <div><p className="text-xs opacity-80">Total Expenses</p><p className="text-xl font-bold">{formatINR(summary.totalExpenses)}</p></div>
-        </div>
-        <div className="flex items-center gap-3 rounded-xl bg-blue-500 p-4 text-white shadow-sm">
-          <Wallet className="h-8 w-8 opacity-80" />
-          <div><p className="text-xs opacity-80">Total Due</p><p className="text-xl font-bold">{formatINR(summary.totalDue)}</p></div>
-        </div>
-        <div className="flex items-center gap-3 rounded-xl bg-amber-400 p-4 text-black shadow-sm">
-          <IndianRupee className="h-8 w-8 opacity-80" />
-          <div><p className="text-xs opacity-80">Net Profit</p><p className="text-xl font-bold">{formatINR(summary.netProfit)}</p></div>
-        </div>
+        <SummaryCard icon={TrendingUp} label="Total Income" value={formatINR(summary.totalIncome)} bg="bg-emerald-500" visible={amountsVisible} />
+        <SummaryCard icon={TrendingDown} label="Total Expenses" value={formatINR(summary.totalExpenses)} bg="bg-red-500" visible={amountsVisible} />
+        <SummaryCard icon={Wallet} label="Total Due" value={formatINR(summary.totalDue)} bg="bg-blue-500" visible={amountsVisible} />
+        <SummaryCard icon={IndianRupee} label="Net Profit" value={formatINR(summary.netProfit)} bg="bg-amber-400" textDark visible={amountsVisible} />
       </div>
 
       <Card className="mb-4 flex flex-col gap-3 p-3 sm:flex-row sm:items-end">
@@ -56,34 +57,54 @@ export function FinanceView({ summary, transactions, orders, startDate, endDate 
         <div className="flex-1"><Label>End Date</Label><Input type="date" value={endDate || ""} onChange={(e) => setRange("endDate", e.target.value)} /></div>
       </Card>
 
-      <Card className="overflow-hidden">
-        {transactions.length === 0 ? (
-          <EmptyState title="No transactions" hint="Use the + button to add an entry." />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[700px] text-left text-sm">
-              <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
-                <tr><th className="px-4 py-3">Date</th><th className="px-4 py-3">Order</th><th className="px-4 py-3">Category</th><th className="px-4 py-3">Type</th><th className="px-4 py-3">Amount</th><th className="px-4 py-3 text-right">Actions</th></tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {transactions.map((t) => (
-                  <tr key={t.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-gray-600">{formatDateDMY(t.date)}</td>
-                    <td className="px-4 py-3 text-gray-600">{t.orderLabel ?? "General"}</td>
-                    <td className="px-4 py-3 text-gray-900">{t.category}</td>
-                    <td className="px-4 py-3"><StatusBadge status={t.type} /></td>
-                    <td className={`px-4 py-3 font-semibold ${t.type === "income" ? "text-kp-success" : "text-kp-danger"}`}>{t.type === "income" ? "+" : "−"}{formatINR(t.amount)}</td>
-                    <td className="px-4 py-3 text-right"><DelBtn id={t.id} /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Card>
+      {!hasDateFilter ? (
+        <Card className="p-8 text-center">
+          <p className="text-sm text-gray-500">Select a date range to view transactions.</p>
+        </Card>
+      ) : (
+        <Card className="overflow-hidden">
+          {transactions.length === 0 ? (
+            <EmptyState title="No transactions" hint="Use the + button to add an entry." />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[600px] text-left text-sm">
+                <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
+                  <tr><th className="px-4 py-3">Date</th><th className="px-4 py-3">Order</th><th className="px-4 py-3">Category</th><th className="px-4 py-3">Type</th><th className="px-4 py-3">Amount</th><th className="px-4 py-3 text-right">Actions</th></tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {transactions.map((t) => (
+                    <tr key={t.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-gray-600">{formatDateDMY(t.date)}</td>
+                      <td className="px-4 py-3 text-gray-600">{t.orderLabel ?? "General"}</td>
+                      <td className="px-4 py-3 text-gray-900">{t.category}</td>
+                      <td className="px-4 py-3"><StatusBadge status={t.type} /></td>
+                      <td className={`px-4 py-3 font-semibold ${amountsVisible ? "" : "blur-sm select-none"} ${t.type === "income" ? "text-kp-success" : "text-kp-danger"}`}>
+                        {t.type === "income" ? "+" : "−"}{formatINR(t.amount)}
+                      </td>
+                      <td className="px-4 py-3 text-right"><DelBtn id={t.id} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Card>
+      )}
 
       <Fab onClick={() => setAddOpen(true)} label="Add entry" />
       {addOpen && <AddModal orders={orders} onClose={() => setAddOpen(false)} />}
+    </div>
+  );
+}
+
+function SummaryCard({ icon: Icon, label, value, bg, textDark, visible }: { icon: typeof TrendingUp; label: string; value: string; bg: string; textDark?: boolean; visible: boolean }) {
+  return (
+    <div className={`flex items-center gap-3 rounded-xl p-4 shadow-sm ${bg} ${textDark ? "text-black" : "text-white"}`}>
+      <Icon className="h-8 w-8 opacity-80" />
+      <div>
+        <p className="text-xs opacity-80">{label}</p>
+        <p className={`text-xl font-bold ${visible ? "" : "blur-sm select-none"}`}>{value}</p>
+      </div>
     </div>
   );
 }

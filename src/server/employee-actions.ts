@@ -20,6 +20,10 @@ export async function createEmployee(input: { name: string; email: string; phone
     mustChangePwd: false,
   });
   revalidatePath("/employees");
+  try {
+    const { sendWelcomeEmail } = await import("@/lib/email");
+    await sendWelcomeEmail({ to: email, name: input.name.trim(), password: input.password });
+  } catch {}
 }
 
 export async function resetPassword(userId: number, newPassword: string) {

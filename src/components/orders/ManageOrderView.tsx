@@ -7,7 +7,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { EVENT_CATEGORIES, ORDER_STATUS } from "@/drizzle/schema";
 import { updateOrderStatus, saveAssignments, reserveItems, unreserveItem } from "@/server/order-actions";
 import { formatINR, formatDateDMY } from "@/lib/utils";
-import { Search, ArrowLeft } from "lucide-react";
+import { Search, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { getOrderDetail } from "@/lib/orders-queries";
 
 type Detail = NonNullable<Awaited<ReturnType<typeof getOrderDetail>>>;
@@ -17,6 +17,7 @@ export function ManageOrderView({ detail }: { detail: Detail }) {
   const due = Math.max(0, Number(order.totalBudget) - paid);
 
   const [statusOpen, setStatusOpen] = useState(false);
+  const [amountsVisible, setAmountsVisible] = useState(false);
 
   return (
     <div>
@@ -30,6 +31,13 @@ export function ManageOrderView({ detail }: { detail: Detail }) {
           <p className="text-sm text-gray-500">{order.clientName} · {order.contactPerson ?? "—"}</p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setAmountsVisible(!amountsVisible)}
+            className="flex items-center gap-1 rounded-lg border border-gray-200 px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-gray-50"
+          >
+            {amountsVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+            {amountsVisible ? "Hide" : "Show"}
+          </button>
           <StatusBadge status={order.status} />
           <Button variant="primary" onClick={() => setStatusOpen(true)}>Change Status</Button>
           <Link href={`/orders/${order.id}/invoice`} target="_blank"><Button variant="success">Invoice</Button></Link>
@@ -49,9 +57,9 @@ export function ManageOrderView({ detail }: { detail: Detail }) {
           <DetailRow k="Phone" v={order.contactPhone} />
           <DetailRow k="Email" v={order.contactEmail} />
           <DetailRow k="Address" v={order.address} />
-          <DetailRow k="Budget" v={formatINR(Number(order.totalBudget))} />
-          <DetailRow k="Paid" v={formatINR(paid)} />
-          <DetailRow k="Due" v={formatINR(due)} accent />
+          <DetailRow k="Budget" v={formatINR(Number(order.totalBudget))} blur={!amountsVisible} />
+          <DetailRow k="Paid" v={formatINR(paid)} blur={!amountsVisible} />
+          <DetailRow k="Due" v={formatINR(due)} accent blur={!amountsVisible} />
         </Card>
 
         {/* Workforce */}
@@ -77,11 +85,11 @@ export function ManageOrderView({ detail }: { detail: Detail }) {
   );
 }
 
-function DetailRow({ k, v, accent }: { k: string; v: unknown; accent?: boolean }) {
+function DetailRow({ k, v, accent, blur }: { k: string; v: unknown; accent?: boolean; blur?: boolean }) {
   return (
     <div className="flex justify-between gap-4 border-b border-gray-50 py-1.5 text-sm">
       <span className="text-gray-500">{k}</span>
-      <span className={`text-right ${accent ? "font-bold text-kp-danger" : "font-medium text-gray-800"}`}>{(v as string) || "—"}</span>
+      <span className={`text-right ${blur ? "blur-sm select-none" : ""} ${accent ? "font-bold text-kp-danger" : "font-medium text-gray-800"}`}>{(v as string) || "—"}</span>
     </div>
   );
 }
@@ -217,7 +225,7 @@ function InventorySection({
                     placeholder="qty"
                     value={draftQty || ""}
                     onChange={(e) => setDraft((d) => ({ ...d, [it.id]: Math.min(avail, Math.max(0, Number(e.target.value))) }))}
-                    className="h-8 w-24"
+                    className="h-8 w-20 sm:w-24"
                   />
                   {draftQty > 0 && <span className="text-xs text-gray-400">−{draftQty} until reserved</span>}
                 </div>
@@ -279,7 +287,7 @@ function ChangeStatusModal({ orderId, current, onClose }: { orderId: number; cur
             <p className="mb-3 text-sm font-semibold text-amber-800">
               Take inventory back to warehouse?
             </p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <ModeCard active={mode === "automatic"} onClick={() => setMode("automatic")} title="Automatic" desc="Items return via scanner in the system (stock auto-updates)." />
               <ModeCard active={mode === "manual"} onClick={() => setMode("manual")} title="Manual" desc="You will return items manually to warehouse stock." />
             </div>
