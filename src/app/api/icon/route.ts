@@ -16,7 +16,7 @@ export async function GET() {
   </defs>
   <rect width="512" height="512" fill="#ffffff" rx="96"/>
   <g clip-path="url(#r)">
-    <image href="${escapeXml(logoUrl)}" x="56" y="56" width="400" height="400" preserveAspectRatio="xMidYMid meet"/>
+    <image href="${escapeXml(logoUrl)}" x="24" y="24" width="464" height="464" preserveAspectRatio="xMidYMid meet"/>
   </g>
 </svg>`;
 

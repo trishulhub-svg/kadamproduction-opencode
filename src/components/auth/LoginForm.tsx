@@ -17,7 +17,7 @@ export function LoginForm({ logoUrl }: { logoUrl: string | null }) {
                 <img
                   src={logoUrl}
                   alt="Kadam Production"
-                  className="kp-logo-zoom mx-auto h-auto max-h-28 w-auto max-w-[280px] rounded-xl object-contain"
+                  className="kp-logo-zoom mx-auto h-auto w-full max-h-40 rounded-xl object-contain"
                 />
               </div>
             ) : (
