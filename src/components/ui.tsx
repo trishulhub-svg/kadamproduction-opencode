@@ -13,7 +13,7 @@ export function Button({
 }) {
   const variants: Record<string, string> = {
     primary: "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white shadow-sm shadow-[var(--accent-glow)]",
-    secondary: "bg-gray-500 hover:bg-gray-600 text-white",
+    secondary: "bg-gray-500 hover:bg-gray-600 text-white dark:bg-gray-600 dark:hover:bg-gray-500",
     success: "bg-kp-success hover:bg-emerald-700 text-white",
     warning: "bg-kp-warning hover:bg-amber-600 text-white",
     danger: "bg-kp-danger hover:bg-red-700 text-white",
@@ -45,7 +45,7 @@ export function Input({ className, ...props }: React.InputHTMLAttributes<HTMLInp
   return (
     <input
       className={cn(
-        "glass-input h-10 w-full rounded-lg px-3 text-sm outline-none transition focus:border-kp-primary focus:ring-2 focus:ring-blue-400/30",
+        "glass-input h-10 w-full rounded-lg px-3 text-sm outline-none transition focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20",
         className
       )}
       {...props}

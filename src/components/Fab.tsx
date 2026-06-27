@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 
 export function Fab({ onClick, label = "Add" }: { onClick: () => void; label?: string }) {
   return (
-    <button onClick={onClick} className="fab bg-purple-gradient text-white" aria-label={label}>
+    <button onClick={onClick} className="fab text-white" aria-label={label}>
       <Plus className="h-7 w-7" strokeWidth={2.5} />
     </button>
   );

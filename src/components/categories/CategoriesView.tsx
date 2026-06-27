@@ -136,20 +136,20 @@ function FabMenu({ onSelect }: { onSelect: (t: "master" | "sub" | "item") => voi
     <>
       <button
         onClick={() => setOpen(!open)}
-        className="fab bg-brand-gradient text-white"
+        className="fab text-white"
         aria-label="Add"
       >
         <Plus className="h-7 w-7" />
       </button>
       {open && (
         <div className="fixed bottom-24 right-4 z-50 space-y-2">
-          <button onClick={() => { setOpen(false); onSelect("item"); }} className="flex w-44 items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-lg hover:bg-gray-50">
-            <Package className="h-4 w-4 text-gray-500" /> Add Item
+          <button onClick={() => { setOpen(false); onSelect("item"); }} className="flex w-44 items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-lg hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:shadow-gray-900/50 dark:hover:bg-gray-700">
+            <Package className="h-4 w-4 text-gray-500 dark:text-gray-400" /> Add Item
           </button>
-          <button onClick={() => { setOpen(false); onSelect("sub"); }} className="flex w-44 items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-lg hover:bg-gray-50">
-            <Layers className="h-4 w-4 text-indigo-500" /> Add Sub-Category
+          <button onClick={() => { setOpen(false); onSelect("sub"); }} className="flex w-44 items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-lg hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:shadow-gray-900/50 dark:hover:bg-gray-700">
+            <Layers className="h-4 w-4 text-indigo-500 dark:text-indigo-400" /> Add Sub-Category
           </button>
-          <button onClick={() => { setOpen(false); onSelect("master"); }} className="flex w-44 items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-lg hover:bg-gray-50">
+          <button onClick={() => { setOpen(false); onSelect("master"); }} className="flex w-44 items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-lg hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:shadow-gray-900/50 dark:hover:bg-gray-700">
             <FolderOpen className="h-4 w-4 text-violet-600" /> Add Master Category
           </button>
         </div>
