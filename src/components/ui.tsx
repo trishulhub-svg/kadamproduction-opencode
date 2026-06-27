@@ -12,7 +12,7 @@ export function Button({
   size?: "sm" | "md" | "lg" | "icon";
 }) {
   const variants: Record<string, string> = {
-    primary: "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white shadow-sm shadow-[var(--accent-glow)]",
+    primary: "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white dark:text-gray-900 shadow-sm",
     secondary: "bg-gray-500 hover:bg-gray-600 text-white dark:bg-gray-600 dark:hover:bg-gray-500",
     success: "bg-kp-success hover:bg-emerald-700 text-white",
     warning: "bg-kp-warning hover:bg-amber-600 text-white",
@@ -91,8 +91,7 @@ export function Badge({ className, tone = "gray", ...props }: React.HTMLAttribut
     green: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300",
     yellow: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
     red: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300",
-    blue: "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
-    purple: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300",
+    blue: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-200",
     dark: "bg-gray-800 text-white dark:bg-gray-200 dark:text-gray-800",
   };
   return <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold", tones[tone] ?? tones.gray, className)} {...props} />;

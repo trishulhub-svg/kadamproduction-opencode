@@ -42,7 +42,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        <StatCard label="Create New Order" value="New" tone="purple" href="/orders?new=1" icon={Plus} smallText />
+        <StatCard label="Create New Order" value="New" tone="primary" href="/orders?new=1" icon={Plus} smallText />
         <StatCard label="On Events" value={s.busy} tone="warning" href="/inventory" icon={CalendarClock} />
         <StatCard label="Ongoing Orders" value={s.ongoingOrders} tone="info" href="/orders?status=ongoing" icon={CalendarClock} />
         <StatCard label="Upcoming" value={s.upcomingOrders} tone="secondary" href="/orders?status=upcoming" icon={CalendarCheck} />
@@ -64,10 +64,10 @@ export default async function DashboardPage() {
         </Card>
 
         <Card className="overflow-hidden border-l-4 border-l-kp-primary p-4 shadow-sm">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-violet-600">Inventory</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-600">Inventory</p>
           <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-500/20">
-              <FolderOpen className="h-6 w-6 text-violet-600" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-500/20">
+              <FolderOpen className="h-6 w-6 text-gray-600" />
             </div>
             <div className="text-sm text-gray-600">
               <span className="font-semibold text-gray-900">{s.busy}</span> on events<br />

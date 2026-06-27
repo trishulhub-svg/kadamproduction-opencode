@@ -72,7 +72,7 @@ export function Sidebar({
             </div>
           )}
           <div className="min-w-0">
-            <div className="truncate text-base font-bold text-white drop-shadow-sm">KP Admin</div>
+            <div className="truncate text-base font-bold text-white">KP Admin</div>
             <div className="truncate text-xs text-white/60">Kadam Production</div>
           </div>
         </div>

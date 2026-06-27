@@ -47,15 +47,15 @@ export function CategoriesView({ categories, subcategories, items }: { categorie
             const isOpen = expanded.has(cat.id);
             return (
               <Card key={cat.id} className="overflow-hidden">
-                <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-violet-50 to-purple-50 px-4 py-3 dark:from-violet-950/30 dark:to-purple-950/30">
+                <div className="flex items-center justify-between gap-3 bg-gradient-to-r from-gray-50 to-gray-100 px-4 py-3 dark:from-gray-900/40 dark:to-gray-800/40">
                   <button onClick={() => toggle(cat.id)} className="flex flex-1 items-center gap-2 text-left">
                     {isOpen ? <ChevronDown className="h-5 w-5 text-gray-500" /> : <ChevronRight className="h-5 w-5 text-gray-500" />}
-                    <FolderOpen className="h-5 w-5 text-violet-600" />
+                    <FolderOpen className="h-5 w-5 text-gray-600" />
                     <div>
                       <span className="font-semibold text-gray-900 dark:text-gray-100">{cat.name}</span>
                       {cat.description && <span className="ml-2 truncate text-xs text-gray-500 dark:text-gray-400">{cat.description}</span>}
                     </div>
-                    <span className="ml-2 shrink-0 rounded-full bg-violet-50 px-2 py-0.5 text-xs font-medium text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+                    <span className="ml-2 shrink-0 rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                       {subs.length} sub · {subs.reduce((a, s) => a + itemsOfSub(s.id).length, 0)} items
                     </span>
                   </button>
@@ -150,7 +150,7 @@ function FabMenu({ onSelect }: { onSelect: (t: "master" | "sub" | "item") => voi
             <Layers className="h-4 w-4 text-indigo-500 dark:text-indigo-400" /> Add Sub-Category
           </button>
           <button onClick={() => { setOpen(false); onSelect("master"); }} className="flex w-44 items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-medium text-gray-700 shadow-lg hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:shadow-gray-900/50 dark:hover:bg-gray-700">
-            <FolderOpen className="h-4 w-4 text-violet-600" /> Add Master Category
+            <FolderOpen className="h-4 w-4 text-gray-600" /> Add Master Category
           </button>
         </div>
       )}

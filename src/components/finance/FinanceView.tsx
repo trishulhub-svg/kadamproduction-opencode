@@ -48,8 +48,8 @@ export function FinanceView({ summary, transactions, orders, startDate, endDate 
       <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard icon={TrendingUp} label="Total Income" value={formatINR(summary.totalIncome)} bg="from-emerald-500/25 to-emerald-600/15 border-emerald-200/40 text-emerald-900" visible={amountsVisible} />
         <SummaryCard icon={TrendingDown} label="Total Expenses" value={formatINR(summary.totalExpenses)} bg="from-red-500/25 to-red-600/15 border-red-200/40 text-red-900" visible={amountsVisible} />
-        <SummaryCard icon={Wallet} label="Total Due" value={formatINR(summary.totalDue)} bg="from-violet-500/25 to-violet-600/15 border-violet-200/40 text-violet-900" visible={amountsVisible} />
-        <SummaryCard icon={IndianRupee} label="Net Profit" value={formatINR(summary.netProfit)} bg="from-violet-500/25 to-violet-600/15 border-violet-200/40 text-violet-900" visible={amountsVisible} />
+        <SummaryCard icon={Wallet} label="Total Due" value={formatINR(summary.totalDue)} bg="from-gray-800/20 to-gray-900/10 border-gray-200/40 text-gray-900" visible={amountsVisible} />
+        <SummaryCard icon={IndianRupee} label="Net Profit" value={formatINR(summary.netProfit)} bg="from-gray-800/20 to-gray-900/10 border-gray-200/40 text-gray-900" visible={amountsVisible} />
       </div>
 
       <Card className="mb-4 flex flex-col gap-3 p-3 sm:flex-row sm:items-end">

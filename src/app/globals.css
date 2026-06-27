@@ -3,78 +3,73 @@
 @tailwind utilities;
 
 :root {
-  /* Background & Text */
-  --bg: #f1f5f9;
-  --bg-secondary: #e2e8f0;
+  --bg: #f8fafc;
+  --bg-secondary: #f1f5f9;
   --text: #0f172a;
   --text-secondary: #475569;
   --text-muted: #94a3b8;
 
-  /* Accent */
-  --accent: #7c3aed;
-  --accent-hover: #6d28d9;
-  --accent-light: rgba(124, 58, 237, 0.08);
-  --accent-glow: rgba(124, 58, 237, 0.2);
+  --accent: #0f172a;
+  --accent-hover: #1e293b;
+  --accent-light: rgba(15, 23, 42, 0.06);
+  --accent-glow: rgba(15, 23, 42, 0.08);
 
-  /* Glass - higher opacity for readability */
   --glass-bg: rgba(255, 255, 255, 0.75);
-  --glass-border: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.6);
   --glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 8px 32px rgba(0, 0, 0, 0.04);
 
   --glass-card-bg: rgba(255, 255, 255, 0.8);
-  --glass-card-border: rgba(226, 232, 240, 0.6);
+  --glass-card-border: rgba(226, 232, 240, 0.5);
   --glass-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 24px rgba(0, 0, 0, 0.04);
 
   --glass-input-bg: rgba(255, 255, 255, 0.6);
   --glass-input-border: #e2e8f0;
 
-  --glass-sidebar-bg: rgba(255, 255, 255, 0.8);
-  --glass-sidebar-border: rgba(226, 232, 240, 0.8);
+  --glass-sidebar-bg: rgba(255, 255, 255, 0.82);
+  --glass-sidebar-border: rgba(226, 232, 240, 0.7);
 
-  --overlay-bg: rgba(15, 23, 42, 0.3);
+  --overlay-bg: rgba(15, 23, 42, 0.25);
   --scrollbar-thumb: #cbd5e1;
-  --nav-hover: rgba(124, 58, 237, 0.06);
-  --nav-active-bg: rgba(124, 58, 237, 0.1);
-  --nav-active-text: #7c3aed;
+  --nav-hover: rgba(15, 23, 42, 0.04);
+  --nav-active-bg: rgba(15, 23, 42, 0.08);
+  --nav-active-text: #0f172a;
 
-  --brand-gradient: linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #5b21b6 100%);
-  --brand-gradient-dark: linear-gradient(135deg, #1e1b4b 0%, #2e1065 50%, #4c1d95 100%);
+  --brand-gradient: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #020617 100%);
 }
 
 .dark {
-  --bg: #080a12;
-  --bg-secondary: #0f111a;
+  --bg: #05070a;
+  --bg-secondary: #0a0c12;
   --text: #f1f5f9;
   --text-secondary: #94a3b8;
   --text-muted: #475569;
 
-  --accent: #a78bfa;
-  --accent-hover: #c4b5fd;
-  --accent-light: rgba(167, 139, 250, 0.1);
-  --accent-glow: rgba(167, 139, 250, 0.15);
+  --accent: #f1f5f9;
+  --accent-hover: #e2e8f0;
+  --accent-light: rgba(241, 245, 249, 0.06);
+  --accent-glow: rgba(241, 245, 249, 0.08);
 
-  --glass-bg: rgba(12, 14, 25, 0.75);
-  --glass-border: rgba(255, 255, 255, 0.05);
-  --glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.2), 0 8px 32px rgba(0, 0, 0, 0.3);
+  --glass-bg: rgba(10, 12, 18, 0.78);
+  --glass-border: rgba(255, 255, 255, 0.04);
+  --glass-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 8px 32px rgba(0, 0, 0, 0.4);
 
-  --glass-card-bg: rgba(12, 14, 25, 0.8);
-  --glass-card-border: rgba(255, 255, 255, 0.05);
-  --glass-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.15), 0 4px 24px rgba(0, 0, 0, 0.25);
+  --glass-card-bg: rgba(10, 12, 18, 0.82);
+  --glass-card-border: rgba(255, 255, 255, 0.04);
+  --glass-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 4px 24px rgba(0, 0, 0, 0.35);
 
-  --glass-input-bg: rgba(12, 14, 25, 0.6);
-  --glass-input-border: rgba(255, 255, 255, 0.08);
+  --glass-input-bg: rgba(10, 12, 18, 0.6);
+  --glass-input-border: rgba(255, 255, 255, 0.06);
 
-  --glass-sidebar-bg: rgba(8, 10, 18, 0.85);
-  --glass-sidebar-border: rgba(255, 255, 255, 0.04);
+  --glass-sidebar-bg: rgba(5, 7, 10, 0.88);
+  --glass-sidebar-border: rgba(255, 255, 255, 0.03);
 
   --overlay-bg: rgba(0, 0, 0, 0.6);
   --scrollbar-thumb: #1e293b;
-  --nav-hover: rgba(167, 139, 250, 0.06);
-  --nav-active-bg: rgba(167, 139, 250, 0.12);
-  --nav-active-text: #a78bfa;
+  --nav-hover: rgba(241, 245, 249, 0.04);
+  --nav-active-bg: rgba(241, 245, 249, 0.08);
+  --nav-active-text: #f1f5f9;
 
-  --brand-gradient: linear-gradient(135deg, #1e1b4b 0%, #2e1065 50%, #4c1d95 100%);
-  --brand-gradient-dark: linear-gradient(135deg, #1e1b4b 0%, #2e1065 50%, #4c1d95 100%);
+  --brand-gradient: linear-gradient(135deg, #0a0c12 0%, #05070a 50%, #000000 100%);
 }
 
 @layer components {
@@ -103,17 +98,15 @@
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-right: 1px solid var(--glass-sidebar-border);
-    box-shadow: 0 0 0 1px rgba(0,0,0,0.02);
   }
   .glass-sidebar .brand-header {
     background: var(--brand-gradient);
-    position: relative;
   }
   .glass-sidebar .brand-header::after {
     content: '';
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 100%);
+    background: linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 100%);
     pointer-events: none;
   }
 }
@@ -126,7 +119,6 @@ body {
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-/* Dark mode text/background overrides */
 .dark .text-gray-900 { color: #f1f5f9 !important; }
 .dark .text-gray-800 { color: #e2e8f0 !important; }
 .dark .text-gray-700 { color: #cbd5e1 !important; }
@@ -146,7 +138,6 @@ body {
 .dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(255,255,255,0.05) !important; }
 .dark body { color-scheme: dark; }
 
-/* FAB */
 .fab {
   position: fixed;
   right: 1rem;
@@ -159,7 +150,7 @@ body {
   align-items: center;
   justify-content: center;
   background: var(--brand-gradient);
-  box-shadow: 0 8px 28px var(--accent-glow);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.2);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 @media (max-width: 640px) {
@@ -167,7 +158,6 @@ body {
 }
 .fab:active { transform: scale(0.92); }
 
-/* Print */
 @media print {
   body * { visibility: hidden; }
   .print-area, .print-area * { visibility: visible; }
@@ -175,12 +165,10 @@ body {
   .no-print { display: none !important; }
 }
 
-/* Scrollbar */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
 
-/* Logo zoom */
 @keyframes kp-logo-zoom {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.12); }
