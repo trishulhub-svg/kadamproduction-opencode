@@ -165,6 +165,12 @@ export async function login(email: string, password: string): Promise<{ ok: true
     await recordFailedAttempt(email);
     return { ok: false, error: "Invalid Credentials" };
   }
+
+  // Deactivation check
+  if (user.active === false) {
+    await recordFailedAttempt(email);
+    return { ok: false, error: "Your account has been deactivated. Contact your administrator." };
+  }
   const match = await bcrypt.compare(password, user.password);
   if (!match) {
     await recordFailedAttempt(email);

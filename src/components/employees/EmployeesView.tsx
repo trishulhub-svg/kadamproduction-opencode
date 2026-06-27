@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { Button, Input, Label, Modal, Card, EmptyState } from "@/components/ui";
 import { Fab } from "@/components/Fab";
-import { createEmployee, resetPassword, deleteEmployee } from "@/server/employee-actions";
+import { createEmployee, resetPassword, deleteEmployee, toggleEmployeeActive } from "@/server/employee-actions";
 
-type Emp = { id: number; name: string; email: string; phone: string | null };
+type Emp = { id: number; name: string; email: string; phone: string | null; active: boolean };
 
 export function EmployeesView({ employees }: { employees: Emp[] }) {
   const [addOpen, setAddOpen] = useState(false);
@@ -17,9 +17,9 @@ export function EmployeesView({ employees }: { employees: Emp[] }) {
           <EmptyState title="No employees" hint="Use the + button to add one." />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-left text-sm">
+            <table className="w-full min-w-[700px] text-left text-sm">
               <thead className="bg-gray-50 text-xs uppercase tracking-wide text-gray-500">
-                <tr><th className="px-4 py-3">Name</th><th className="px-4 py-3">Email</th><th className="px-4 py-3">Phone</th><th className="px-4 py-3 text-right">Actions</th></tr>
+                <tr><th className="px-4 py-3">Name</th><th className="px-4 py-3">Email</th><th className="px-4 py-3">Phone</th><th className="px-4 py-3">Status</th><th className="px-4 py-3 text-right">Actions</th></tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {employees.map((e) => (
@@ -27,8 +27,10 @@ export function EmployeesView({ employees }: { employees: Emp[] }) {
                     <td className="px-4 py-3 font-medium text-gray-900">{e.name}</td>
                     <td className="px-4 py-3 text-gray-600">{e.email}</td>
                     <td className="px-4 py-3 text-gray-600">{e.phone ?? "—"}</td>
+                    <td className="px-4 py-3">{e.active ? <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">Active</span> : <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">Deactivated</span>}</td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
+                        <ToggleBtn id={e.id} name={e.name} active={e.active} />
                         <ResetBtn id={e.id} name={e.name} />
                         <DeleteBtn id={e.id} name={e.name} />
                       </div>
@@ -73,6 +75,11 @@ function AddModal({ onClose }: { onClose: () => void }) {
       </form>
     </Modal>
   );
+}
+
+function ToggleBtn({ id, name, active }: { id: number; name: string; active: boolean }) {
+  const [pending, setPending] = useState(false);
+  return <Button size="sm" variant="outline" disabled={pending} onClick={async () => { setPending(true); await toggleEmployeeActive(id); setPending(false); }}>{pending ? "…" : active ? "Deactivate" : "Reactivate"}</Button>;
 }
 
 function ResetBtn({ id, name }: { id: number; name: string }) {

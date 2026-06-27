@@ -41,6 +41,7 @@ export const users = sqliteTable(
     createdAt: integer("created_at", { mode: "timestamp" }).notNull().$defaultFn(() => new Date()),
     updatedAt: integer("updated_at", { mode: "timestamp" }).notNull().$onUpdateFn(() => new Date()),
     deletedAt: integer("deleted_at", { mode: "timestamp" }),
+    active: integer("active", { mode: "boolean" }).notNull().default(true),
   },
   (t) => ({
     emailIdx: uniqueIndex("users_email_idx").on(t.email),

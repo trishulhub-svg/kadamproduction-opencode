@@ -10,7 +10,7 @@ export default async function EmployeesPage() {
   if (!user || user.role !== "admin") return null;
   try {
     const employees = await db
-      .select({ id: schema.users.id, name: schema.users.name, email: schema.users.email, phone: schema.users.phone })
+      .select({ id: schema.users.id, name: schema.users.name, email: schema.users.email, phone: schema.users.phone, active: schema.users.active })
       .from(schema.users)
       .where(and(eq(schema.users.role, "employee"), isNull(schema.users.deletedAt)));
     return <EmployeesView employees={employees} />;
