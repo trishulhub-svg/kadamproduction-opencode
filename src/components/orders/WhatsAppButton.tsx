@@ -22,9 +22,9 @@ export function WhatsAppButton({
   function send() {
     const cleaned = phone.replace(/\D/g, "").replace(/^0+/, "");
     let num = cleaned;
-    if (num && !num.startsWith("91") && num.length === 10) num = "91" + num;
-    if (!num || num.length < 10) {
-      alert("No valid contact phone number on this order.");
+    if (num.length === 10) num = "91" + num;
+    if (!num || num.length < 12 || !num.startsWith("91")) {
+      alert("Please add a valid 10-digit Indian mobile number to this order.");
       return;
     }
     const msg =
