@@ -1,9 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { ThemeProviderWrapper } from "@/components/ThemeProviderWrapper";
 import "./globals.css";
-import dynamic from "next/dynamic";
-
-const Agentation = dynamic(() => import("agentation").then((m) => m.Agentation), { ssr: false });
+import AgentationWrapper from "@/components/AgentationWrapper";
 
 export const metadata: Metadata = {
   title: "Kadam Production",
@@ -49,7 +47,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ThemeProviderWrapper>
           {children}
         </ThemeProviderWrapper>
-        <Agentation />
+        <AgentationWrapper />
         <script
           dangerouslySetInnerHTML={{
             __html: `
