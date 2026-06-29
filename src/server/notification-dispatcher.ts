@@ -1,6 +1,5 @@
 // src/server/notification-dispatcher.ts
-"use server";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
 
 type NotifyInput = {
