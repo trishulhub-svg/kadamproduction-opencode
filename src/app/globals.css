@@ -46,30 +46,30 @@
 
   --accent: #f1f5f9;
   --accent-hover: #e2e8f0;
-  --accent-light: rgba(241, 245, 249, 0.06);
-  --accent-glow: rgba(241, 245, 249, 0.08);
+  --accent-light: rgba(241, 245, 249, 0.08);
+  --accent-glow: rgba(241, 245, 249, 0.12);
 
-  --glass-bg: rgba(10, 12, 18, 0.68);
-  --glass-border: rgba(255, 255, 255, 0.06);
-  --glass-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), 0 12px 40px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.04);
+  --glass-bg: rgba(15, 18, 28, 0.55);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 2px 8px rgba(0, 0, 0, 0.35), 0 12px 48px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 
-  --glass-card-bg: rgba(12, 14, 20, 0.72);
-  --glass-card-border: rgba(255, 255, 255, 0.05);
-  --glass-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.25), 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.03);
+  --glass-card-bg: rgba(18, 22, 32, 0.6);
+  --glass-card-border: rgba(255, 255, 255, 0.07);
+  --glass-card-shadow: 0 1px 3px rgba(0, 0, 0, 0.3), 0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 
-  --glass-input-bg: rgba(10, 12, 18, 0.6);
-  --glass-input-border: rgba(255, 255, 255, 0.06);
+  --glass-input-bg: rgba(15, 18, 28, 0.5);
+  --glass-input-border: rgba(255, 255, 255, 0.08);
 
-  --glass-sidebar-bg: rgba(5, 7, 10, 0.88);
-  --glass-sidebar-border: rgba(255, 255, 255, 0.03);
+  --glass-sidebar-bg: rgba(8, 10, 16, 0.82);
+  --glass-sidebar-border: rgba(255, 255, 255, 0.06);
 
   --overlay-bg: rgba(0, 0, 0, 0.6);
   --scrollbar-thumb: #1e293b;
-  --nav-hover: rgba(241, 245, 249, 0.04);
-  --nav-active-bg: rgba(241, 245, 249, 0.08);
+  --nav-hover: rgba(241, 245, 249, 0.05);
+  --nav-active-bg: rgba(241, 245, 249, 0.1);
   --nav-active-text: #f1f5f9;
 
-  --brand-gradient: linear-gradient(135deg, #0a0c12 0%, #05070a 50%, #000000 100%);
+  --brand-gradient: linear-gradient(135deg, #121624 0%, #080a10 50%, #030406 100%);
 }
 
 @keyframes theme-wipe-in {

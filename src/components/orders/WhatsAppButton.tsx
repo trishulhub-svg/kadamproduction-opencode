@@ -11,6 +11,7 @@ export function WhatsAppButton({
   total,
   paid,
   due,
+  invoiceUrl,
 }: {
   phone: string;
   orderNum: string;
@@ -18,6 +19,7 @@ export function WhatsAppButton({
   total: number;
   paid: number;
   due: number;
+  invoiceUrl?: string;
 }) {
   const cleaned = phone.replace(/\D/g, "").replace(/^0+/, "");
   let num = cleaned;
@@ -31,8 +33,8 @@ export function WhatsAppButton({
     `Total Amount: ${formatINR(total)}\n` +
     `Advance Paid: ${formatINR(paid)}\n` +
     `Balance Due: ${formatINR(due)}\n\n` +
-    `Thank you for choosing Kadam Production.\n` +
-    `kadamproduction.in`;
+    `View your invoice online: ${invoiceUrl ?? `https://app.kadamproduction.in`}\n\n` +
+    `Thank you for choosing Kadam Production.`;
 
   const waUrl = valid ? `https://wa.me/${num}?text=${encodeURIComponent(msg)}` : null;
 
