@@ -50,6 +50,21 @@ export async function resetPassword(userId: number, newPassword: string) {
   revalidatePath("/employees");
 }
 
+export async function updateEmployee(input: { id: number; name: string; email: string; phone?: string }) {
+  const user = await requireAdmin();
+  if (!user) throw new Error("Unauthorized");
+  const email = input.email.toLowerCase().trim();
+  const dup = await db
+    .select({ id: schema.users.id })
+    .from(schema.users)
+    .where(and(eq(schema.users.email, email), isNull(schema.users.deletedAt)))
+    .limit(1)
+    .then((r) => r[0]);
+  if (dup && dup.id !== input.id) throw new Error("Email already in use.");
+  await db.update(schema.users).set({ name: input.name.trim(), email, phone: input.phone || null }).where(eq(schema.users.id, input.id));
+  revalidatePath("/employees");
+}
+
 export async function deleteEmployee(userId: number) {
   const user = await requireAdmin();
   if (!user) throw new Error("Unauthorized");

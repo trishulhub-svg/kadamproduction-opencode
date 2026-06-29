@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { Button, Input, Label, Modal, Card, EmptyState } from "@/components/ui";
 import { Fab } from "@/components/Fab";
-import { createEmployee, resetPassword, deleteEmployee, toggleEmployeeActive } from "@/server/employee-actions";
+import { createEmployee, updateEmployee, resetPassword, deleteEmployee, toggleEmployeeActive } from "@/server/employee-actions";
 
 type Emp = { id: number; name: string; email: string; phone: string | null; active: boolean };
 
 export function EmployeesView({ employees }: { employees: Emp[] }) {
   const [addOpen, setAddOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<Emp | null>(null);
   return (
     <div>
       <h1 className="mb-5 text-2xl font-bold text-gray-900">Employees</h1>
@@ -30,6 +31,7 @@ export function EmployeesView({ employees }: { employees: Emp[] }) {
                     <td className="px-4 py-3">{e.active ? <span className="rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">Active</span> : <span className="rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">Deactivated</span>}</td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-2">
+                        <EditBtn onClick={() => setEditTarget(e)} />
                         <ToggleBtn id={e.id} name={e.name} active={e.active} />
                         <ResetBtn id={e.id} name={e.name} />
                         <DeleteBtn id={e.id} name={e.name} />
@@ -44,6 +46,7 @@ export function EmployeesView({ employees }: { employees: Emp[] }) {
       </Card>
       <Fab onClick={() => setAddOpen(true)} label="Add employee" />
       {addOpen && <AddModal onClose={() => setAddOpen(false)} />}
+      {editTarget && <EditModal emp={editTarget} onClose={() => setEditTarget(null)} />}
     </div>
   );
 }
@@ -97,4 +100,32 @@ function ResetBtn({ id, name }: { id: number; name: string }) {
 function DeleteBtn({ id, name }: { id: number; name: string }) {
   const [pending, setPending] = useState(false);
   return <Button size="sm" variant="danger" disabled={pending} onClick={async () => { if (confirm(`Remove ${name}?`)) { setPending(true); await deleteEmployee(id); } }}>{pending ? "…" : "Delete"}</Button>;
+}
+
+function EditBtn({ onClick }: { onClick: () => void }) {
+  return <Button size="sm" variant="outline" onClick={onClick}>Edit</Button>;
+}
+
+function EditModal({ emp, onClose }: { emp: Emp; onClose: () => void }) {
+  const [pending, setPending] = useState(false);
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setPending(true);
+    const f = new FormData(e.currentTarget);
+    try {
+      await updateEmployee({ id: emp.id, name: String(f.get("name")), email: String(f.get("email")), phone: String(f.get("phone") || "") });
+      onClose();
+    } catch (err) { alert((err as Error).message); setPending(false); }
+  }
+  return (
+    <Modal open onClose={onClose} title="Edit Employee">
+      <form onSubmit={submit} className="space-y-4">
+        <input type="hidden" name="id" value={emp.id} />
+        <div><Label>Name *</Label><Input name="name" defaultValue={emp.name} required /></div>
+        <div><Label>Email *</Label><Input name="email" type="email" defaultValue={emp.email} required /></div>
+        <div><Label>Phone</Label><Input name="phone" defaultValue={emp.phone ?? ""} /></div>
+        <div className="flex justify-end gap-2 pt-2"><Button variant="ghost" type="button" onClick={onClose}>Cancel</Button><Button type="submit" disabled={pending}>{pending ? "Saving…" : "Save"}</Button></div>
+      </form>
+    </Modal>
+  );
 }
