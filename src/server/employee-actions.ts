@@ -1,9 +1,10 @@
 // src/server/employee-actions.ts
 "use server";
 import { revalidatePath } from "next/cache";
-import { eq, isNull, and } from "drizzle-orm";
+import { eq, isNull, and, desc } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
 import { requireAdmin, hashPassword } from "@/lib/auth";
+import { dispatchNotification } from "./notification-dispatcher";
 
 export async function createEmployee(input: { name: string; email: string; phone?: string; password: string }) {
   const user = await requireAdmin();
@@ -11,17 +12,26 @@ export async function createEmployee(input: { name: string; email: string; phone
   const email = input.email.toLowerCase().trim();
   const exists = await db.select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.email, email)).limit(1);
   if (exists.length) throw new Error("Email already in use.");
-  await db.insert(schema.users).values({
+  const result = await db.insert(schema.users).values({
     name: input.name.trim(),
     email,
     phone: input.phone || null,
     password: await hashPassword(input.password),
     role: "employee",
     mustChangePwd: false,
-  });
+  }).then(() =>
+    db.select({ id: schema.users.id }).from(schema.users).where(eq(schema.users.email, email)).limit(1).then((r) => r[0])
+  );
   try {
     const { sendWelcomeEmail } = await import("@/lib/email");
     await sendWelcomeEmail({ to: email, name: input.name.trim(), password: input.password });
+    await dispatchNotification({
+      userId: result.id,
+      type: "account_created",
+      title: "Welcome to Kadam Production",
+      message: `Your account has been created. Check your email for login details.`,
+      link: "/my-tasks",
+    });
   } catch {}
   revalidatePath("/employees");
 }

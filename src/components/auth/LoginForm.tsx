@@ -75,6 +75,11 @@ export function LoginForm({ logoUrl }: { logoUrl: string | null }) {
             >
               {pending ? "Signing in\u2026" : "LOGIN"}
             </button>
+            <div className="text-center">
+              <a href="/forgot-password" className="text-xs text-gray-500 hover:text-gray-300 transition-colors dark:text-gray-400 dark:hover:text-gray-200">
+                Forgot password?
+              </a>
+            </div>
           </form>
         </div>
         <p className="mt-4 text-center text-xs text-white/50">

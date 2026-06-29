@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { eq, and, isNull, gte, asc } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { db, schema } from "./db";
+import { checkRateLimit as generalRateLimit } from "./rate-limiter";
 
 const COOKIE = "kp_session";
 const MAX_ADMIN_DEVICES = 2;
@@ -114,7 +115,9 @@ export async function requireAdmin(): Promise<SessionUser | null> {
   return u;
 }
 
-// H2: Brute-force protection using settings table
+// ──────────────────────────────────────────────────────────────────────────
+// Brute-force protection (legacy)
+// ──────────────────────────────────────────────────────────────────────────
 async function checkRateLimit(email: string): Promise<{ allowed: boolean; error?: string }> {
   const key = `rl_${email.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
   try {
@@ -232,6 +235,106 @@ export async function logout(): Promise<void> {
 /** Hash a password (bcrypt) — used by seed + employee create. */
 export async function hashPassword(plain: string): Promise<string> {
   return bcrypt.hash(plain, 12); // L3: bumped from 10 to 12
+}
+
+// ──────────────────────────────────────────────────────────────────────────
+// Forgot Password — OTP via SMTP
+// ──────────────────────────────────────────────────────────────────────────
+
+function generateOtp(): string {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+export async function sendForgotOtp(email: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const rl = await checkRateLimit(email); // Use the same rate limiter as login
+  if (!rl.allowed) return { ok: false, error: rl.error! };
+
+  const user = await db
+    .select({ id: schema.users.id, name: schema.users.name })
+    .from(schema.users)
+    .where(and(eq(schema.users.email, email.toLowerCase()), isNull(schema.users.deletedAt)))
+    .limit(1)
+    .then((r) => r[0]);
+  if (!user) return { ok: false, error: "No account found with that email." };
+
+  const otp = generateOtp();
+  const hashed = await bcrypt.hash(otp, 10);
+  const key = `forgot_otp_${email.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
+  await db
+    .insert(schema.settings)
+    .values({ key, value: JSON.stringify({ otp: hashed, expiresAt: Date.now() + 10 * 60 * 1000 }) })
+    .onConflictDoUpdate({ target: schema.settings.key, set: { value: JSON.stringify({ otp: hashed, expiresAt: Date.now() + 10 * 60 * 1000 }) } });
+
+  const { sendEmail } = await import("@/lib/email");
+  await sendEmail({
+    to: email,
+    subject: "Password Reset OTP — Kadam Production",
+    html: `
+      <div style="max-width:500px;margin:0 auto;font-family:Arial,sans-serif;color:#333">
+        <h2 style="color:#1e40af">Password Reset Request</h2>
+        <p>Hello <strong>${user.name}</strong>,</p>
+        <p>Use the following OTP to reset your password. It expires in 10 minutes.</p>
+        <div style="margin:24px 0;text-align:center">
+          <span style="display:inline-block;padding:12px 32px;font-size:28px;font-weight:700;letter-spacing:8px;background:#f3f4f6;border-radius:8px;color:#1e40af">${otp}</span>
+        </div>
+        <p style="color:#6b7280;font-size:13px">If you did not request this, please ignore this email.</p>
+        <hr style="margin:24px 0;border:none;border-top:1px solid #e5e7eb" />
+        <p style="font-size:12px;color:#6b7280">Kadam Production — Professional Event Services</p>
+      </div>
+    `,
+  });
+
+  return { ok: true };
+}
+
+export async function verifyForgotOtp(email: string, otp: string): Promise<{ ok: true; token: string } | { ok: false; error: string }> {
+  const rl = await generalRateLimit(`verify_otp_${email.toLowerCase().replace(/[^a-z0-9]/g, "")}`, { max: 5, windowMs: 15 * 60 * 1000 });
+  if (!rl.allowed) return { ok: false, error: "Too many attempts. Try again later." };
+
+  const key = `forgot_otp_${email.toLowerCase().replace(/[^a-z0-9]/g, "")}`;
+  const row = await db.select().from(schema.settings).where(eq(schema.settings.key, key)).limit(1).then((r) => r[0]);
+  if (!row) return { ok: false, error: "No OTP was requested for this email." };
+
+  const data = JSON.parse(row.value);
+  if (Date.now() > data.expiresAt) {
+    await db.delete(schema.settings).where(eq(schema.settings.key, key));
+    return { ok: false, error: "OTP has expired. Request a new one." };
+  }
+
+  if (!(await bcrypt.compare(otp, data.otp))) return { ok: false, error: "Invalid OTP." };
+
+  await db.delete(schema.settings).where(eq(schema.settings.key, key));
+
+  const resetToken = await new SignJWT({ email: email.toLowerCase(), purpose: "password_reset" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime("15m")
+    .sign(getSecret());
+
+  return { ok: true, token: resetToken };
+}
+
+export async function resetPasswordWithToken(token: string, newPassword: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const { payload } = await jwtVerify(token, getSecret());
+    if (payload.purpose !== "password_reset" || !payload.email) {
+      return { ok: false, error: "Invalid reset token." };
+    }
+    const email = payload.email as string;
+    const user = await db
+      .select({ id: schema.users.id })
+      .from(schema.users)
+      .where(and(eq(schema.users.email, email), isNull(schema.users.deletedAt)))
+      .limit(1)
+      .then((r) => r[0]);
+    if (!user) return { ok: false, error: "User not found." };
+
+    await db.update(schema.users).set({ password: await hashPassword(newPassword), mustChangePwd: false }).where(eq(schema.users.id, user.id));
+    await db.update(schema.sessions).set({ revokedAt: new Date() }).where(and(eq(schema.sessions.userId, user.id), isNull(schema.sessions.revokedAt)));
+
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Invalid or expired reset token." };
+  }
 }
 
 /** Verify current + set new password (Change Password page). */

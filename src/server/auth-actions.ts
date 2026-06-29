@@ -1,7 +1,7 @@
 // src/server/auth-actions.ts
 "use server";
 import { redirect } from "next/navigation";
-import { login, logout, getCurrentUser, changePassword } from "@/lib/auth";
+import { login, logout, getCurrentUser, changePassword, sendForgotOtp, verifyForgotOtp, resetPasswordWithToken } from "@/lib/auth";
 
 export async function logoutAction() {
   await logout();
@@ -26,4 +26,32 @@ export async function changePasswordAction(_prev: { ok: boolean; error?: string 
   if (next !== confirmPw) return { ok: false, error: "Passwords do not match." };
   const res = await changePassword(user.id, current, next);
   return res.ok ? { ok: true } : { ok: false, error: res.error };
+}
+
+export async function forgotPasswordAction(_prev: { ok?: boolean; error?: string; step?: string; email?: string } | null, formData: FormData) {
+  const email = String(formData.get("email") || "").toLowerCase().trim();
+  if (!email) return { error: "Email is required." };
+  const res = await sendForgotOtp(email);
+  if (!res.ok) return { error: res.error };
+  return { ok: true, step: "otp", email };
+}
+
+export async function verifyOtpAction(_prev: { ok?: boolean; error?: string; step?: string; token?: string } | null, formData: FormData) {
+  const email = String(formData.get("email") || "").toLowerCase().trim();
+  const otp = String(formData.get("otp") || "");
+  if (!email || !otp) return { error: "Missing fields." };
+  const res = await verifyForgotOtp(email, otp);
+  if (!res.ok) return { error: res.error };
+  return { ok: true, step: "reset", token: res.token };
+}
+
+export async function resetPasswordAction(_prev: { ok?: boolean; error?: string } | null, formData: FormData) {
+  const token = String(formData.get("token") || "");
+  const password = String(formData.get("password") || "");
+  const confirm = String(formData.get("confirm") || "");
+  if (password.length < 6) return { error: "Password must be at least 6 characters." };
+  if (password !== confirm) return { error: "Passwords do not match." };
+  const res = await resetPasswordWithToken(token, password);
+  if (!res.ok) return { error: res.error };
+  return { ok: true };
 }
