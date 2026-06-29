@@ -20,7 +20,7 @@ type OrderData = {
 type InvoiceData = { order: OrderData; orderNum: string; paid: number; grandTotal: number; gstNumber: string; gstPercentage: number; gstAmount: number; total: number; due: number; sameAddress: boolean; billingAddr: string; eventAddr: string };
 
 export function InvoicePublicView({ invoice }: { invoice: InvoiceData }) {
-  const { order, orderNum, paid, grandTotal, gstNumber, gstPercentage, gstAmount, total, due, sameAddress, billingAddr, eventAddr } = invoice;
+  const { order, orderNum, paid, gstNumber, gstPercentage, gstAmount, total, due, sameAddress, billingAddr, eventAddr } = invoice;
   const [step, setStep] = useState<"checking" | "verify" | "otp" | "view">("checking");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
