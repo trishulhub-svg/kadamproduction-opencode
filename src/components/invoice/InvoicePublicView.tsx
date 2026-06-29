@@ -74,34 +74,34 @@ export function InvoicePublicView({ invoice }: { invoice: InvoiceData }) {
 
   if (step === "checking") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-800 border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-950">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-800 border-t-transparent dark:border-gray-300 dark:border-t-transparent" />
       </div>
     );
   }
 
   if (step === "verify" || step === "otp") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-        <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-xl">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4 dark:from-gray-900 dark:to-gray-950">
+        <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white/70 p-8 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-white/5">
           <div className="mb-6 text-center">
-            <h1 className="text-xl font-bold text-gray-900">Kadam Production</h1>
-            <p className="mt-1 text-sm text-gray-500">Invoice Access — {orderNum}</p>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Kadam Production</h1>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Invoice Access — {orderNum}</p>
           </div>
 
           {step === "verify" && (
             <form onSubmit={sendOtp} className="space-y-4">
-              <p className="text-sm text-gray-600">Enter your email to receive a one-time passcode.</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Enter your email to receive a one-time passcode.</p>
               <input
                 type="email"
                 placeholder="Your email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-11 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm outline-none focus:border-gray-800"
+                className="h-11 w-full rounded-lg border border-gray-200 bg-white/70 px-3 text-sm text-gray-900 outline-none backdrop-blur-lg transition focus:border-gray-800 dark:border-white/10 dark:bg-white/10 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:border-white/30"
               />
               {error && <p className="text-sm text-red-600">{error}</p>}
-              <button type="submit" disabled={pending} className="h-11 w-full rounded-lg bg-gray-900 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:opacity-50">
+              <button type="submit" disabled={pending} className="h-11 w-full rounded-lg bg-gray-900 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:opacity-50 dark:bg-white/15 dark:text-gray-100 dark:hover:bg-white/20">
                 {pending ? "Sending…" : "Send OTP"}
               </button>
             </form>
@@ -109,7 +109,7 @@ export function InvoicePublicView({ invoice }: { invoice: InvoiceData }) {
 
           {step === "otp" && (
             <form onSubmit={verifyOtp} className="space-y-4">
-              <p className="text-sm text-gray-600">Enter the 6-digit code sent to <strong>{email}</strong></p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Enter the 6-digit code sent to <strong className="text-gray-900 dark:text-gray-100">{email}</strong></p>
               <input
                 type="text"
                 inputMode="numeric"
@@ -119,17 +119,17 @@ export function InvoicePublicView({ invoice }: { invoice: InvoiceData }) {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                 required
-                className="h-11 w-full rounded-lg border border-gray-200 bg-white px-3 text-center text-lg tracking-[8px] outline-none focus:border-gray-800"
+                className="h-11 w-full rounded-lg border border-gray-200 bg-white/70 px-3 text-center text-lg font-bold tracking-[8px] text-gray-900 outline-none backdrop-blur-lg transition placeholder:text-gray-300 focus:border-gray-800 dark:border-white/10 dark:bg-white/10 dark:text-gray-100 dark:placeholder-gray-600 dark:focus:border-white/30"
               />
-              {error && <p className="text-sm text-red-600">{error}</p>}
-              <button type="submit" disabled={pending || otp.length !== 6} className="h-11 w-full rounded-lg bg-gray-900 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:opacity-50">
+              {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+              <button type="submit" disabled={pending || otp.length !== 6} className="h-11 w-full rounded-lg bg-gray-900 text-sm font-semibold text-white transition hover:bg-gray-800 disabled:opacity-50 dark:bg-white/15 dark:text-gray-100 dark:hover:bg-white/20">
                 {pending ? "Verifying…" : "View Invoice"}
               </button>
               <div className="flex items-center justify-center gap-3">
-                <button type="button" onClick={() => setStep("verify")} className="text-xs text-gray-500 underline hover:text-gray-700">
+                <button type="button" onClick={() => setStep("verify")} className="text-xs text-gray-500 underline hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                   Use a different email
                 </button>
-                <span className="text-xs text-gray-300">|</span>
+                <span className="text-xs text-gray-300 dark:text-gray-600">|</span>
                 <button type="button" onClick={async () => { setError(""); setPending(true); try { const r = await fetch("/api/invoice-otp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "send_otp", orderId: order.id, email: email.trim() }) }); const d = await r.json(); if (!r.ok) setError(d.error); else setError(""); } catch { setError("Network error."); } setPending(false); }} className="text-xs text-gray-500 underline hover:text-gray-700">
                   Resend OTP
                 </button>
