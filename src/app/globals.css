@@ -141,24 +141,27 @@ body {
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-.dark .text-gray-900 { color: #f1f5f9 !important; }
-.dark .text-gray-800 { color: #e2e8f0 !important; }
-.dark .text-gray-700 { color: #cbd5e1 !important; }
-.dark .text-gray-600 { color: #94a3b8 !important; }
-.dark .text-gray-500 { color: #64748b !important; }
-.dark .text-gray-400 { color: #475569 !important; }
-.dark .text-gray-300 { color: #334155 !important; }
-.dark .text-gray-200 { color: #1e293b !important; }
-.dark .bg-gray-50 { background-color: rgba(255,255,255,0.02) !important; }
-.dark .bg-gray-100 { background-color: rgba(255,255,255,0.03) !important; }
-.dark .hover\:bg-gray-50:hover { background-color: rgba(255,255,255,0.04) !important; }
-.dark .hover\:bg-gray-100:hover { background-color: rgba(255,255,255,0.05) !important; }
-.dark .border-gray-100 { border-color: rgba(255,255,255,0.06) !important; }
-.dark .border-gray-200 { border-color: rgba(255,255,255,0.05) !important; }
-.dark .border-gray-300 { border-color: rgba(255,255,255,0.08) !important; }
-.dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(255,255,255,0.06) !important; }
-.dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(255,255,255,0.05) !important; }
+@layer utilities {
+  .dark .text-gray-900 { color: #f1f5f9; }
+  .dark .text-gray-800 { color: #e2e8f0; }
+  .dark .text-gray-700 { color: #cbd5e1; }
+  .dark .text-gray-600 { color: #94a3b8; }
+  .dark .text-gray-500 { color: #64748b; }
+  .dark .text-gray-400 { color: #475569; }
+  .dark .text-gray-300 { color: #334155; }
+  .dark .text-gray-200 { color: #1e293b; }
+  .dark .bg-gray-50 { background-color: rgba(255,255,255,0.02); }
+  .dark .bg-gray-100 { background-color: rgba(255,255,255,0.03); }
+  .dark .hover\:bg-gray-50:hover { background-color: rgba(255,255,255,0.04); }
+  .dark .hover\:bg-gray-100:hover { background-color: rgba(255,255,255,0.05); }
+  .dark .border-gray-100 { border-color: rgba(255,255,255,0.06); }
+  .dark .border-gray-200 { border-color: rgba(255,255,255,0.05); }
+  .dark .border-gray-300 { border-color: rgba(255,255,255,0.08); }
+  .dark .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(255,255,255,0.06); }
+  .dark .divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(255,255,255,0.05); }
+}
 .dark body { color-scheme: dark; }
+:root { color-scheme: light; }
 
 .fab {
   position: fixed;
